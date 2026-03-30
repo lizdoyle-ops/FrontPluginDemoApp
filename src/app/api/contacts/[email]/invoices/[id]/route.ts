@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import { invoiceSchema } from "@/lib/api/contactSchemas";
 import {
   deleteInvoice,
@@ -20,6 +21,8 @@ export async function PUT(
   request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw, id } = await context.params;
   const email = decodeEmail(raw);
   const json = await request.json();
@@ -38,9 +41,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw, id } = await context.params;
   const email = decodeEmail(raw);
   if (!getContact(email)) {

@@ -10,7 +10,7 @@ import {
   Paperclip,
   Wrench,
 } from "lucide-react";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { CollapsibleSection } from "@/components/dashboard/CollapsibleSection";
 import { ContactCard } from "@/components/dashboard/ContactCard";
@@ -22,10 +22,11 @@ import { PropertiesSection } from "@/components/dashboard/sections/PropertiesSec
 import { QuotesSection } from "@/components/dashboard/sections/QuotesSection";
 import { TimelineSection } from "@/components/dashboard/sections/TimelineSection";
 import { WorkOrdersSection } from "@/components/dashboard/sections/WorkOrdersSection";
+import type { EmailBranding } from "@/lib/email/emailBranding";
 import { generateEmailTemplate } from "@/lib/email/generateEmailTemplate";
 import { generateInvoiceDraftHtml } from "@/lib/email/generateInvoiceDraftHtml";
 import type { ContactData, CustomContactField, Invoice, SectionId } from "@/types/contact";
-import { getFrontConversationBridge } from "@/lib/front/frontBridge";
+import { createHtmlDraftReply } from "@/lib/front/createHtmlDraftReply";
 
 const SECTION_LABELS: Record<SectionId, string> = {
   properties: "Properties",
@@ -51,42 +52,57 @@ const SECTION_ICONS: Record<SectionId, LucideIcon> = {
 
 export function ContactDashboard({
   contact,
+  replyToMessageId,
   sectionOrder,
   visibleSections,
   customContactFields,
   companyName,
   brandColor,
   secondaryColor,
+  logoUrl,
+  appTitle,
   caseOverridesRaw,
 }: {
   contact: ContactData;
+  replyToMessageId: string | null;
   sectionOrder: SectionId[];
   visibleSections: Record<SectionId, boolean>;
   customContactFields: CustomContactField[];
   companyName: string;
   brandColor: string;
   secondaryColor: string;
+  logoUrl: string | null;
+  appTitle: string;
   caseOverridesRaw: string;
 }) {
   const [draftStatus, setDraftStatus] = useState<string | null>(null);
+
+  const emailBranding: EmailBranding = useMemo(
+    () => ({
+      companyName,
+      brandColor,
+      secondaryColor,
+      logoUrl,
+      appTitle,
+    }),
+    [appTitle, brandColor, companyName, logoUrl, secondaryColor],
+  );
 
   const sendSummaryDraft = useCallback(async () => {
     setDraftStatus(null);
     try {
       const FrontMod = await import("@frontapp/plugin-sdk");
-      const html = generateEmailTemplate(contact, {
-        companyName,
-        brandColor,
-        secondaryColor,
-      });
-      await getFrontConversationBridge(FrontMod.default).createDraft({
-        content: { body: html, type: "html" },
-      });
-      setDraftStatus("Summary draft saved in Front.");
+      const html = generateEmailTemplate(contact, emailBranding);
+      await createHtmlDraftReply(FrontMod.default, html, replyToMessageId);
+      setDraftStatus(
+        replyToMessageId
+          ? "Reply draft saved in this conversation."
+          : "Draft saved (open inside a Front conversation for threaded reply).",
+      );
     } catch {
       setDraftStatus("Could not create draft (open in Front).");
     }
-  }, [brandColor, companyName, contact, secondaryColor]);
+  }, [contact, emailBranding, replyToMessageId]);
 
   const sendInvoiceDraft = useCallback(
     async (invoice: Invoice) => {
@@ -96,18 +112,19 @@ export function ContactDashboard({
         const html = generateInvoiceDraftHtml(
           contact,
           invoice,
-          companyName,
-          brandColor,
+          emailBranding,
         );
-        await getFrontConversationBridge(FrontMod.default).createDraft({
-          content: { body: html, type: "html" },
-        });
-        setDraftStatus("Invoice draft saved in Front.");
+        await createHtmlDraftReply(FrontMod.default, html, replyToMessageId);
+        setDraftStatus(
+          replyToMessageId
+            ? "Invoice reply draft saved in this conversation."
+            : "Draft saved (open inside a Front conversation for threaded reply).",
+        );
       } catch {
         setDraftStatus("Could not create draft (open in Front).");
       }
     },
-    [brandColor, companyName, contact],
+    [contact, emailBranding, replyToMessageId],
   );
 
   const sections: Record<SectionId, { count: number; node: ReactNode }> = {
@@ -181,7 +198,7 @@ export function ContactDashboard({
             title={SECTION_LABELS[id]}
             count={meta.count}
             variant={isInvoices ? "accordion" : "nav"}
-            defaultOpen={isInvoices}
+            defaultOpen={false}
           >
             {meta.node}
           </CollapsibleSection>

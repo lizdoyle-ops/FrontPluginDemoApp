@@ -53,11 +53,27 @@ Use [GitHub authentication](https://docs.github.com/en/get-started/git-basics/ab
 1. Sign in at [vercel.com](https://vercel.com) and click **Add New… → Project**.
 2. **Import** the GitHub repository you just pushed.
 3. Leave defaults (Framework: Next.js, Build: `next build`, Output: Next.js). Deploy.
-4. Copy the production URL (e.g. `https://front-property-plugin.vercel.app`).
+4. Copy the production URL. This project’s deployment is **[https://front-plugin-demo-app.vercel.app/](https://front-plugin-demo-app.vercel.app/)**.
 
-**Front plugin URL:** use the **root** of that deployment, e.g. `https://your-app.vercel.app` (Front loads the plugin in an iframe; paths like `/` and `/settings` work relative to that origin).
+**Front plugin URL:** use the **root** of that deployment (Front loads the plugin in an iframe; paths like `/` and `/settings` work relative to that origin).
+
+### Ship new changes (GitHub → Vercel)
+
+1. Commit and push to the branch Vercel is watching (usually `main`):
+
+   ```bash
+   git add -A
+   git commit -m "Describe your change"
+   git push origin main
+   ```
+
+2. **Vercel** picks up the push automatically if the project is **connected to that GitHub repo** (Git integration). Watch **Deployments** in the Vercel project; when the build is green, production updates.
+
+3. If you need to redeploy without a new commit: Vercel dashboard → your project → **Deployments** → **⋯** on the latest deployment → **Redeploy**.
 
 **Note:** The demo API writes to the server filesystem only when `/data` exists on the host; on Vercel the filesystem is ephemeral, so API mutations may not persist across deploys—mock data and `localStorage` still work for the sidebar UI.
+
+**API auth:** All `/api/contacts/*` routes require `Authorization: Bearer <token>`. The default token is built in; override with `NEXT_PUBLIC_DEMO_API_TOKEN` in Vercel (see [.env.example](.env.example)). The hamburger menu links to **API docs · token** (`/api-docs`).
 
 ## Front plugin setup
 
@@ -66,7 +82,7 @@ Use [GitHub authentication](https://docs.github.com/en/get-started/git-basics/ab
 
 ## API
 
-See [API.md](API.md) and [public/openapi.yaml](public/openapi.yaml) (`/openapi.yaml` when running).
+See [API.md](API.md), `/api-docs` in the app (token + CRUD table), and [public/openapi.yaml](public/openapi.yaml).
 
 ## Stack
 

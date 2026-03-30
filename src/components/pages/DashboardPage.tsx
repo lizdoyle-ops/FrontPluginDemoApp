@@ -12,6 +12,7 @@ import {
   extractEmailsFromMessages,
   normalizeMessageList,
 } from "@/lib/front/contactDetection";
+import { pickReplyMessageId } from "@/lib/front/pickReplyMessageId";
 import { fetchContactData } from "@/lib/front/fetchContact";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
 import type { ContactData } from "@/types/contact";
@@ -19,7 +20,12 @@ import { MOCK_CONTACTS } from "@/data/mockData";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "ready"; contact: ContactData }
+  | {
+      status: "ready";
+      contact: ContactData;
+      /** Front message id for reply drafts; absent outside Front or `?demo=` mode. */
+      replyToMessageId: string | null;
+    }
   | { status: "no_contact" }
   | { status: "error"; message: string };
 
@@ -52,18 +58,27 @@ export function DashboardPage() {
     if (demo) {
       const c = await fetchContactData(demo);
       if (c) {
-        setState({ status: "ready", contact: c });
+        setState({
+          status: "ready",
+          contact: c,
+          replyToMessageId: null,
+        });
         return;
       }
     }
 
     try {
       const messages = await collectMessages();
+      const replyToMessageId = pickReplyMessageId(messages) ?? null;
       const emails = extractEmailsFromMessages(messages);
       for (const email of emails) {
         const c = await fetchContactData(email);
         if (c) {
-          setState({ status: "ready", contact: c });
+          setState({
+            status: "ready",
+            contact: c,
+            replyToMessageId,
+          });
           return;
         }
       }
@@ -123,12 +138,15 @@ export function DashboardPage() {
   return (
     <ContactDashboard
       contact={state.contact}
+      replyToMessageId={state.replyToMessageId}
       sectionOrder={config.sectionOrder}
       visibleSections={config.visibleSections}
       customContactFields={config.customContactFields}
       companyName={config.companyName}
       brandColor={config.brandColor}
       secondaryColor={config.secondaryColor}
+      logoUrl={config.logoUrl}
+      appTitle={config.appTitle}
       caseOverridesRaw={config.caseOverridesRaw}
     />
   );

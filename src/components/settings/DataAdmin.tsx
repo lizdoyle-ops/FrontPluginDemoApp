@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
 import type { ContactData } from "@/types/contact";
 import { Card } from "@/components/ui/Card";
+
+const jsonAuth = (): HeadersInit => ({
+  ...demoApiAuthHeaders(),
+  "Content-Type": "application/json",
+});
 
 export function DataAdmin() {
   const [contacts, setContacts] = useState<ContactData[]>([]);
@@ -15,7 +21,9 @@ export function DataAdmin() {
   const refreshList = useCallback(async () => {
     setLoadError(null);
     try {
-      const res = await fetch("/api/contacts?full=1");
+      const res = await fetch("/api/contacts?full=1", {
+        headers: demoApiAuthHeaders(),
+      });
       if (!res.ok) throw new Error("List failed");
       const data = (await res.json()) as { contacts: ContactData[] };
       setContacts(data.contacts ?? []);
@@ -39,9 +47,9 @@ export function DataAdmin() {
     setSelectedEmail(email);
     setStatus(null);
     try {
-      const res = await fetch(
-        `/api/contacts/${encodeURIComponent(email)}`,
-      );
+      const res = await fetch(`/api/contacts/${encodeURIComponent(email)}`, {
+        headers: demoApiAuthHeaders(),
+      });
       if (!res.ok) throw new Error("not found");
       const c = (await res.json()) as ContactData;
       setJsonText(JSON.stringify(c, null, 2));
@@ -60,7 +68,7 @@ export function DataAdmin() {
         `/api/contacts/${encodeURIComponent(selectedEmail)}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: jsonAuth(),
           body: JSON.stringify(parsed),
         },
       );

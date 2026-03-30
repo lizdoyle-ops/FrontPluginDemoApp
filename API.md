@@ -1,8 +1,27 @@
 # Property CRM Demo API
 
-Base URL in development: `http://localhost:3000`
+Use a base URL and token for all examples:
 
-**Authentication:** None in this demo. For production, place the app behind auth or a private network and validate requests.
+```bash
+# Production
+export BASE=https://front-plugin-demo-app.vercel.app
+
+# Local dev
+# export BASE=http://localhost:3000
+```
+
+## Authentication
+
+Every request must include a **Bearer token** (full demo access, non-expiring unless you change it):
+
+```http
+Authorization: Bearer <token>
+```
+
+- Default token (if `NEXT_PUBLIC_DEMO_API_TOKEN` is unset): `fp-property-plugin-demo-all-scopes-3194afc2e7d4`
+- Override in `.env` / Vercel: `NEXT_PUBLIC_DEMO_API_TOKEN=your-secret`
+
+The in-app **API docs** page shows the active token. For production, rotate the env value and treat it like a secret.
 
 **Persistence:** The in-memory store is seeded from mock contacts. If the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored).
 
@@ -11,13 +30,14 @@ Base URL in development: `http://localhost:3000`
 Summaries:
 
 ```bash
-curl -s http://localhost:3000/api/contacts
+export H="Authorization: Bearer fp-property-plugin-demo-all-scopes-3194afc2e7d4"
+curl -s -H "$H" "$BASE/api/contacts"
 ```
 
 Full `ContactData` records:
 
 ```bash
-curl -s "http://localhost:3000/api/contacts?full=1"
+curl -s -H "$H" "$BASE/api/contacts?full=1"
 ```
 
 ## Get one contact
@@ -25,7 +45,7 @@ curl -s "http://localhost:3000/api/contacts?full=1"
 URL-encode the email:
 
 ```bash
-curl -s "http://localhost:3000/api/contacts/leyton%40finalproduction.club"
+curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club"
 ```
 
 ## Replace contact (PUT)
@@ -33,7 +53,8 @@ curl -s "http://localhost:3000/api/contacts/leyton%40finalproduction.club"
 Body must satisfy the full `ContactData` schema (see Zod in `src/lib/api/contactSchemas.ts` or `public/openapi.yaml`).
 
 ```bash
-curl -s -X PUT "http://localhost:3000/api/contacts/leyton%40finalproduction.club" \
+curl -s -X PUT "$BASE/api/contacts/leyton%40finalproduction.club" \
+  -H "$H" \
   -H "Content-Type: application/json" \
   -d @contact.json
 ```
@@ -43,7 +64,8 @@ curl -s -X PUT "http://localhost:3000/api/contacts/leyton%40finalproduction.club
 Shallow merge of top-level fields:
 
 ```bash
-curl -s -X PATCH "http://localhost:3000/api/contacts/leyton%40finalproduction.club" \
+curl -s -X PATCH "$BASE/api/contacts/leyton%40finalproduction.club" \
+  -H "$H" \
   -H "Content-Type: application/json" \
   -d '{"segment":"Updated segment"}'
 ```
@@ -51,7 +73,7 @@ curl -s -X PATCH "http://localhost:3000/api/contacts/leyton%40finalproduction.cl
 ## Delete contact
 
 ```bash
-curl -s -X DELETE "http://localhost:3000/api/contacts/someone%40example.com"
+curl -s -H "$H" -X DELETE "$BASE/api/contacts/someone%40example.com"
 ```
 
 ## Work orders
@@ -59,7 +81,8 @@ curl -s -X DELETE "http://localhost:3000/api/contacts/someone%40example.com"
 Create or upsert:
 
 ```bash
-curl -s -X POST "http://localhost:3000/api/contacts/leyton%40finalproduction.club/work-orders" \
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/work-orders" \
+  -H "$H" \
   -H "Content-Type: application/json" \
   -d '{"id":"wo-new","title":"Garden check","type":"inspection","status":"scheduled"}'
 ```
@@ -67,7 +90,8 @@ curl -s -X POST "http://localhost:3000/api/contacts/leyton%40finalproduction.clu
 Upsert by id in path:
 
 ```bash
-curl -s -X PUT "http://localhost:3000/api/contacts/leyton%40finalproduction.club/work-orders/wo-new" \
+curl -s -X PUT "$BASE/api/contacts/leyton%40finalproduction.club/work-orders/wo-new" \
+  -H "$H" \
   -H "Content-Type: application/json" \
   -d '{"title":"Garden check","type":"inspection","status":"completed"}'
 ```
@@ -75,7 +99,7 @@ curl -s -X PUT "http://localhost:3000/api/contacts/leyton%40finalproduction.club
 Delete:
 
 ```bash
-curl -s -X DELETE "http://localhost:3000/api/contacts/leyton%40finalproduction.club/work-orders/wo-new"
+curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/work-orders/wo-new"
 ```
 
 ## Invoices

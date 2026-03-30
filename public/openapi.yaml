@@ -3,9 +3,11 @@ info:
   title: Property CRM Demo API
   version: 1.0.0
   description: |
-    Demo REST API for the Property Management Front plugin. No authentication in development;
-    add auth before production use.
+    Demo REST API for the Property Management Front plugin.
+    Send header `Authorization: Bearer <token>` (see /api-docs in the app; env `NEXT_PUBLIC_DEMO_API_TOKEN`).
 servers:
+  - url: https://front-plugin-demo-app.vercel.app
+    description: Production (Vercel)
   - url: http://localhost:3000
     description: Local Next.js dev
 paths:

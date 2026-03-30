@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import { contactDataSchema, contactPatchSchema } from "@/lib/api/contactSchemas";
 import {
   deleteContact,
@@ -18,9 +19,11 @@ function decodeEmail(raw: string) {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
   const contact = getContact(email);
@@ -34,6 +37,8 @@ export async function PUT(
   request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
   const json = await request.json();
@@ -52,6 +57,8 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
   const json = await request.json();
@@ -70,9 +77,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
   const ok = deleteContact(email);
