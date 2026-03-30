@@ -2,16 +2,9 @@
 
 import { Building2, Briefcase, Mail, Tag, User } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { DynamicIcon } from "@/lib/icons";
-import type { ContactData, CustomContactField } from "@/types/contact";
+import type { ContactData } from "@/types/contact";
 
-export function ContactCard({
-  contact,
-  customFields,
-}: {
-  contact: ContactData;
-  customFields: CustomContactField[];
-}) {
+export function ContactCard({ contact }: { contact: ContactData }) {
   const firstName = contact.name.trim().split(/\s+/)[0] || contact.name;
   const initial = firstName.charAt(0).toUpperCase();
 
@@ -68,23 +61,6 @@ export function ContactCard({
             </Badge>
           ))}
         </div>
-      ) : null}
-      {customFields.length ? (
-        <ul className="mt-3 space-y-2 border-t border-zinc-100 pt-3">
-          {customFields.map((f) => (
-            <li key={f.id} className="flex items-start gap-2 text-[12px]">
-              <DynamicIcon
-                name={f.icon}
-                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--secondary-color)]"
-                aria-hidden
-              />
-              <div>
-                <div className="text-[11px] text-zinc-500">{f.label}</div>
-                <div className="text-zinc-800">{f.value}</div>
-              </div>
-            </li>
-          ))}
-        </ul>
       ) : null}
     </div>
   );

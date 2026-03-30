@@ -7,6 +7,7 @@ import {
   FileText,
   Headphones,
   Home,
+  Layers,
   Paperclip,
   Wrench,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { ContactCard } from "@/components/dashboard/ContactCard";
 import { AttachmentsSection } from "@/components/dashboard/sections/AttachmentsSection";
 import { CasesSection } from "@/components/dashboard/sections/CasesSection";
 import { ContractsSection } from "@/components/dashboard/sections/ContractsSection";
+import { DynamicCustomListSection } from "@/components/dashboard/sections/DynamicCustomListSection";
 import { InvoicesSection } from "@/components/dashboard/sections/InvoicesSection";
 import { PropertiesSection } from "@/components/dashboard/sections/PropertiesSection";
 import { QuotesSection } from "@/components/dashboard/sections/QuotesSection";
@@ -25,7 +27,12 @@ import { WorkOrdersSection } from "@/components/dashboard/sections/WorkOrdersSec
 import type { EmailBranding } from "@/lib/email/emailBranding";
 import { generateEmailTemplate } from "@/lib/email/generateEmailTemplate";
 import { generateInvoiceDraftHtml } from "@/lib/email/generateInvoiceDraftHtml";
-import type { ContactData, CustomContactField, Invoice, SectionId } from "@/types/contact";
+import type {
+  ContactData,
+  CustomObjectDefinition,
+  Invoice,
+  SectionId,
+} from "@/types/contact";
 import { createHtmlDraftReply } from "@/lib/front/createHtmlDraftReply";
 
 const SECTION_LABELS: Record<SectionId, string> = {
@@ -55,27 +62,37 @@ export function ContactDashboard({
   replyToMessageId,
   sectionOrder,
   visibleSections,
-  customContactFields,
   companyName,
   brandColor,
   secondaryColor,
   logoUrl,
   appTitle,
-  caseOverridesRaw,
+  customObjectDefinitions,
+  customObjectOrder,
+  visibleCustomObjects,
 }: {
   contact: ContactData;
   replyToMessageId: string | null;
   sectionOrder: SectionId[];
   visibleSections: Record<SectionId, boolean>;
-  customContactFields: CustomContactField[];
   companyName: string;
   brandColor: string;
   secondaryColor: string;
   logoUrl: string | null;
   appTitle: string;
-  caseOverridesRaw: string;
+  customObjectDefinitions: CustomObjectDefinition[];
+  customObjectOrder: string[];
+  visibleCustomObjects: Record<string, boolean>;
 }) {
   const [draftStatus, setDraftStatus] = useState<string | null>(null);
+
+  const defById = useMemo(
+    () =>
+      Object.fromEntries(
+        customObjectDefinitions.map((d) => [d.id, d]),
+      ) as Record<string, CustomObjectDefinition>,
+    [customObjectDefinitions],
+  );
 
   const emailBranding: EmailBranding = useMemo(
     () => ({
@@ -138,12 +155,7 @@ export function ContactDashboard({
     },
     cases: {
       count: contact.cases.length,
-      node: (
-        <CasesSection
-          items={contact.cases}
-          overridesText={caseOverridesRaw}
-        />
-      ),
+      node: <CasesSection items={contact.cases} />,
     },
     workOrders: {
       count: contact.workOrders.length,
@@ -172,9 +184,11 @@ export function ContactDashboard({
     },
   };
 
+  const customLists = contact.customLists ?? {};
+
   return (
     <div className="mx-auto flex w-full max-w-full flex-col gap-3 px-3 pb-8 pt-3 sm:px-4 lg:gap-4 lg:px-6">
-      <ContactCard contact={contact} customFields={customContactFields} />
+      <ContactCard contact={contact} />
       <button
         type="button"
         onClick={() => void sendSummaryDraft()}
@@ -202,6 +216,27 @@ export function ContactDashboard({
               defaultOpen={false}
             >
               {meta.node}
+            </CollapsibleSection>
+          );
+        })}
+        {customObjectOrder.map((oid) => {
+          if (visibleCustomObjects[oid] === false) return null;
+          const def = defById[oid];
+          if (!def) return null;
+          const rows = customLists[oid] ?? [];
+          return (
+            <CollapsibleSection
+              key={`custom-${oid}`}
+              icon={Layers}
+              title={def.title}
+              count={rows.length}
+              variant="nav"
+              defaultOpen={false}
+            >
+              <DynamicCustomListSection
+                fieldKeys={def.fieldKeys}
+                rows={rows}
+              />
             </CollapsibleSection>
           );
         })}

@@ -7,30 +7,9 @@ const statusVariant: Record<Case["status"], "danger" | "warning" | "success"> = 
   resolved: "success",
 };
 
-export function CasesSection({
-  items,
-  overridesText,
-}: {
-  items: Case[];
-  overridesText: string;
-}) {
-  let overrideNote: string | null = null;
-  if (overridesText.trim()) {
-    try {
-      const o = JSON.parse(overridesText) as { note?: string };
-      overrideNote = o.note ?? null;
-    } catch {
-      overrideNote = null;
-    }
-  }
-
+export function CasesSection({ items }: { items: Case[] }) {
   return (
     <div className="space-y-2">
-      {overrideNote ? (
-        <p className="rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
-          {overrideNote}
-        </p>
-      ) : null}
       {!items?.length ? (
         <p className="text-zinc-500">No support cases.</p>
       ) : (

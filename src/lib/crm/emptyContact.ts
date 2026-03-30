@@ -19,5 +19,6 @@ export function emptyContact(email: string, name: string): ContactData {
     timeline: [],
     attachments: [],
     invoices: [],
+    customLists: {},
   };
 }

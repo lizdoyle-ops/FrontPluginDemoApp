@@ -1,5 +1,5 @@
-import { DemoSettings } from "@/components/settings/DemoSettings";
+import { redirect } from "next/navigation";
 
 export default function SettingsPage() {
-  return <DemoSettings />;
+  redirect("/crm?tab=admin");
 }

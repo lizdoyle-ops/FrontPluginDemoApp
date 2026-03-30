@@ -143,13 +143,14 @@ export function DashboardPage() {
       replyToMessageId={state.replyToMessageId}
       sectionOrder={config.sectionOrder}
       visibleSections={config.visibleSections}
-      customContactFields={config.customContactFields}
       companyName={config.companyName}
       brandColor={config.brandColor}
       secondaryColor={config.secondaryColor}
       logoUrl={config.logoUrl}
       appTitle={config.appTitle}
-      caseOverridesRaw={config.caseOverridesRaw}
+      customObjectDefinitions={config.customObjectDefinitions}
+      customObjectOrder={config.customObjectOrder}
+      visibleCustomObjects={config.visibleCustomObjects}
     />
   );
 }

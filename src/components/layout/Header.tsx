@@ -79,20 +79,12 @@ export function Header({
                   CRM — full workspace
                 </Link>
                 <Link
-                  href="/settings"
+                  href="/crm?tab=admin"
                   className="block px-3 py-2 text-[13px] hover:bg-zinc-50"
                   onClick={() => setOpen(false)}
                   role="menuitem"
                 >
-                  Demo settings
-                </Link>
-                <Link
-                  href="/settings/data"
-                  className="block px-3 py-2 text-[13px] hover:bg-zinc-50"
-                  onClick={() => setOpen(false)}
-                  role="menuitem"
-                >
-                  Records (API)
+                  Admin centre
                 </Link>
                 <Link
                   href="/api-docs"

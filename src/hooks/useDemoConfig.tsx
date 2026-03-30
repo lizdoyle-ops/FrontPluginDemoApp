@@ -10,7 +10,7 @@ import {
 } from "react";
 import { applyBrandCssVars } from "@/lib/theme";
 import { STORAGE_KEYS } from "@/lib/storageKeys";
-import type { CustomContactField, SectionId } from "@/types/contact";
+import type { CustomObjectDefinition, SectionId } from "@/types/contact";
 import { DEFAULT_SECTION_ORDER, SECTION_IDS } from "@/types/contact";
 
 const DEFAULT_BRAND = "#003366";
@@ -54,16 +54,19 @@ function useDemoConfigState() {
       boolean
     >,
   );
-  const [customContactFields, setCustomContactFields] = useState<
-    CustomContactField[]
+  const [customObjectDefinitions, setCustomObjectDefinitions] = useState<
+    CustomObjectDefinition[]
   >([]);
-  const [caseOverridesRaw, setCaseOverridesRaw] = useState("");
+  const [customObjectOrder, setCustomObjectOrder] = useState<string[]>([]);
+  const [visibleCustomObjects, setVisibleCustomObjects] = useState<
+    Record<string, boolean>
+  >({});
 
   const hydrate = useCallback(() => {
     migrateStaleSectionOrder();
     setAppTitle(
       localStorage.getItem(STORAGE_KEYS.appTitle) ??
-      "Reapit Property Management",
+        "Reapit Property Management",
     );
     setCompanyName(
       localStorage.getItem(STORAGE_KEYS.companyName) ?? "Your Company",
@@ -94,12 +97,38 @@ function useDemoConfigState() {
         ...vis,
       } as Record<SectionId, boolean>);
     }
-    setCustomContactFields(
-      readJson<CustomContactField[]>(STORAGE_KEYS.customContactFields, []),
+    const defs = readJson<CustomObjectDefinition[] | null>(
+      STORAGE_KEYS.customObjectDefinitions,
+      null,
     );
-    setCaseOverridesRaw(
-      localStorage.getItem(STORAGE_KEYS.caseOverrides) ?? "",
+    const safeDefs = Array.isArray(defs) ? defs : [];
+    setCustomObjectDefinitions(safeDefs);
+    const idSet = new Set(safeDefs.map((d) => d.id));
+    const coOrder = readJson<string[] | null>(
+      STORAGE_KEYS.customObjectOrder,
+      null,
     );
+    const mergedOrder = (Array.isArray(coOrder) ? coOrder : []).filter((id) =>
+      idSet.has(id),
+    );
+    for (const d of safeDefs) {
+      if (!mergedOrder.includes(d.id)) mergedOrder.push(d.id);
+    }
+    setCustomObjectOrder(mergedOrder);
+    const coVis = readJson<Record<string, boolean> | null>(
+      STORAGE_KEYS.visibleCustomObjects,
+      null,
+    );
+    const coVisibleMap: Record<string, boolean> = {
+      ...(coVis && typeof coVis === "object" ? coVis : {}),
+    };
+    for (const d of safeDefs) {
+      if (coVisibleMap[d.id] === undefined) coVisibleMap[d.id] = true;
+    }
+    for (const k of Object.keys(coVisibleMap)) {
+      if (!idSet.has(k)) delete coVisibleMap[k];
+    }
+    setVisibleCustomObjects(coVisibleMap);
   }, []);
 
   useEffect(() => {
@@ -108,11 +137,7 @@ function useDemoConfigState() {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    applyBrandCssVars(
-      document.documentElement,
-      brandColor,
-      secondaryColor,
-    );
+    applyBrandCssVars(document.documentElement, brandColor, secondaryColor);
   }, [brandColor, secondaryColor]);
 
   useEffect(() => {
@@ -140,10 +165,17 @@ function useDemoConfigState() {
       JSON.stringify(visibleSections),
     );
     localStorage.setItem(
-      STORAGE_KEYS.customContactFields,
-      JSON.stringify(customContactFields),
+      STORAGE_KEYS.customObjectDefinitions,
+      JSON.stringify(customObjectDefinitions),
     );
-    localStorage.setItem(STORAGE_KEYS.caseOverrides, caseOverridesRaw);
+    localStorage.setItem(
+      STORAGE_KEYS.customObjectOrder,
+      JSON.stringify(customObjectOrder),
+    );
+    localStorage.setItem(
+      STORAGE_KEYS.visibleCustomObjects,
+      JSON.stringify(visibleCustomObjects),
+    );
     localStorage.setItem(STORAGE_KEYS.stateTimestamp, String(Date.now()));
     window.dispatchEvent(
       new CustomEvent(SECTION_ORDER_EVENT, { detail: { order: sectionOrder } }),
@@ -151,12 +183,13 @@ function useDemoConfigState() {
   }, [
     appTitle,
     brandColor,
-    caseOverridesRaw,
     companyName,
-    customContactFields,
+    customObjectDefinitions,
+    customObjectOrder,
     logoUrl,
     secondaryColor,
     sectionOrder,
+    visibleCustomObjects,
     visibleSections,
   ]);
 
@@ -175,10 +208,12 @@ function useDemoConfigState() {
     setSectionOrder,
     visibleSections,
     setVisibleSections,
-    customContactFields,
-    setCustomContactFields,
-    caseOverridesRaw,
-    setCaseOverridesRaw,
+    customObjectDefinitions,
+    setCustomObjectDefinitions,
+    customObjectOrder,
+    setCustomObjectOrder,
+    visibleCustomObjects,
+    setVisibleCustomObjects,
     saveToStorage,
     hydrate,
   };

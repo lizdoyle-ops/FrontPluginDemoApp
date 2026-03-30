@@ -132,13 +132,16 @@ export interface ContactData {
   timeline: TimelineEvent[];
   attachments: Attachment[];
   invoices: Invoice[];
+  /** Rows for user-defined object types (Admin centre); keyed by CustomObjectDefinition.id */
+  customLists?: Record<string, Record<string, string>[]>;
 }
 
-export interface CustomContactField {
+/** Configurable list object shown on the plugin dashboard (admin-defined fields). */
+export interface CustomObjectDefinition {
   id: string;
-  label: string;
-  value: string;
-  icon: string;
+  title: string;
+  /** Column keys / field ids for each row */
+  fieldKeys: string[];
 }
 
 export const SECTION_IDS = [

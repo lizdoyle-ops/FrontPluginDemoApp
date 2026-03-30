@@ -1,5 +1,5 @@
-import { DataAdmin } from "@/components/settings/DataAdmin";
+import { redirect } from "next/navigation";
 
-export default function DataAdminPage() {
-  return <DataAdmin />;
+export default function SettingsDataRedirectPage() {
+  redirect("/crm");
 }

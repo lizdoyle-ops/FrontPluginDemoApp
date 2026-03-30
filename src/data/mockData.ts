@@ -152,6 +152,7 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         vendorName: "ClimateCare Services",
       },
     ],
+    customLists: {},
   },
 
   "sarah@zestymedia.club": {
@@ -256,6 +257,7 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         dueDate: "2026-04-05",
       },
     ],
+    customLists: {},
   },
 
   "elias@auditlawyer.club": {
@@ -361,6 +363,7 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         status: "draft",
       },
     ],
+    customLists: {},
   },
 };
 

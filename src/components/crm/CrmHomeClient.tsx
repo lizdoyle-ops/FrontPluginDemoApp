@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2,
   ChevronLeft,
@@ -11,6 +12,7 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Settings2,
   Trash2,
 } from "lucide-react";
 import {
@@ -20,7 +22,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { AdminCentre } from "@/components/crm/AdminCentre";
+import { CustomListsEditor } from "@/components/crm/CustomListsEditor";
 import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
+import { useDemoConfig } from "@/hooks/useDemoConfig";
 import { emptyContact } from "@/lib/crm/emptyContact";
 import type { ContactData } from "@/types/contact";
 
@@ -39,9 +44,10 @@ type TabId =
   | "contracts"
   | "timeline"
   | "attachments"
-  | "inquiries";
+  | "inquiries"
+  | "customLists";
 
-const TABS: { id: TabId; label: string }[] = [
+const BASE_TABS: { id: TabId; label: string }[] = [
   { id: "account", label: "Account" },
   { id: "properties", label: "Properties" },
   { id: "workOrders", label: "Work orders" },
@@ -119,6 +125,10 @@ function inputClass(disabled?: boolean) {
 }
 
 export function CrmHomeClient() {
+  const cfg = useDemoConfig();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [workspace, setWorkspace] = useState<"accounts" | "admin">("accounts");
   const [contacts, setContacts] = useState<ContactData[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [contact, setContact] = useState<ContactData | null>(null);
@@ -135,6 +145,25 @@ export function CrmHomeClient() {
   } | null>(null);
 
   const enc = (e: string) => encodeURIComponent(e);
+
+  useEffect(() => {
+    setWorkspace(searchParams.get("tab") === "admin" ? "admin" : "accounts");
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (tab === "customLists" && cfg.customObjectDefinitions.length === 0) {
+      setTab("account");
+    }
+  }, [tab, cfg.customObjectDefinitions.length]);
+
+  const setWorkspaceRoute = useCallback(
+    (w: "accounts" | "admin") => {
+      setWorkspace(w);
+      const path = "/crm";
+      router.replace(w === "admin" ? `${path}?tab=admin` : path);
+    },
+    [router],
+  );
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -215,6 +244,14 @@ export function CrmHomeClient() {
         c.company.toLowerCase().includes(q),
     );
   }, [contacts, search]);
+
+  const crmTabs = useMemo(() => {
+    if (cfg.customObjectDefinitions.length === 0) return BASE_TABS;
+    return [
+      ...BASE_TABS,
+      { id: "customLists" as TabId, label: "Custom lists" },
+    ];
+  }, [cfg.customObjectDefinitions.length]);
 
   const saveAccount = async () => {
     if (!contact) return;
@@ -1002,6 +1039,14 @@ export function CrmHomeClient() {
               },
             }),
         );
+      case "customLists":
+        return (
+          <CustomListsEditor
+            contact={contact}
+            definitions={cfg.customObjectDefinitions}
+            onUpdated={(c) => mergeContactInList(c)}
+          />
+        );
       default:
         return null;
     }
@@ -1443,14 +1488,14 @@ export function CrmHomeClient() {
     <div className="min-h-dvh bg-gradient-to-br from-zinc-100 via-white to-zinc-100 text-zinc-900">
       <header className="sticky top-0 z-30 border-b border-zinc-200/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6 lg:px-10">
         <div className="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-md"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md"
               style={{ background: "var(--brand-color)" }}
             >
               <LayoutGrid className="h-5 w-5" strokeWidth={2} />
             </div>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
                 CRM workspace
               </h1>
@@ -1458,6 +1503,34 @@ export function CrmHomeClient() {
                 Full-screen desk · same data as the Front plugin
               </p>
             </div>
+            <nav
+              className="flex shrink-0 items-center gap-0.5 rounded-xl border border-zinc-200 bg-zinc-50 p-1"
+              aria-label="Workspace"
+            >
+              <button
+                type="button"
+                onClick={() => setWorkspaceRoute("accounts")}
+                className={`rounded-lg px-3 py-1.5 text-[12px] font-medium transition ${
+                  workspace === "accounts"
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+              >
+                Accounts
+              </button>
+              <button
+                type="button"
+                onClick={() => setWorkspaceRoute("admin")}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition ${
+                  workspace === "admin"
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+              >
+                <Settings2 className="h-3.5 w-3.5" strokeWidth={2} />
+                Admin centre
+              </button>
+            </nav>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
@@ -1467,22 +1540,28 @@ export function CrmHomeClient() {
               <ChevronLeft className="h-4 w-4" />
               Plugin view
             </Link>
-            <button
-              type="button"
-              onClick={() => void refreshList().then(() => showToast("Refreshed."))}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-[12px] font-medium hover:bg-zinc-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Refresh
-            </button>
-            <button
-              type="button"
-              onClick={openNewAccount}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-color)] px-3 py-2 text-[12px] font-semibold text-white shadow-sm hover:opacity-95"
-            >
-              <Plus className="h-4 w-4" />
-              New account
-            </button>
+            {workspace === "accounts" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void refreshList().then(() => showToast("Refreshed."))
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-[12px] font-medium hover:bg-zinc-50"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={openNewAccount}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--brand-color)] px-3 py-2 text-[12px] font-semibold text-white shadow-sm hover:opacity-95"
+                >
+                  <Plus className="h-4 w-4" />
+                  New account
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
       </header>
@@ -1493,100 +1572,106 @@ export function CrmHomeClient() {
         </div>
       ) : null}
 
-      <div className="mx-auto flex max-w-[1600px] gap-0 lg:gap-6 lg:px-6 lg:py-6">
-        <aside className="w-full border-b border-zinc-200 bg-white lg:w-80 lg:shrink-0 lg:rounded-2xl lg:border lg:shadow-sm">
-          <div className="p-4">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-              <input
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-[var(--brand-color)] focus:bg-white focus:ring-2 focus:ring-[var(--brand-color)]/15"
-                placeholder="Search accounts…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-          <nav className="max-h-[40dvh] overflow-y-auto px-2 pb-4 lg:max-h-[calc(100dvh-220px)]">
-            {loading ? (
-              <div className="flex justify-center py-12 text-zinc-500">
-                <Loader2 className="h-8 w-8 animate-spin" />
+      {workspace === "admin" ? (
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-10 lg:py-6">
+          <AdminCentre />
+        </div>
+      ) : (
+        <div className="mx-auto flex max-w-[1600px] gap-0 lg:gap-6 lg:px-6 lg:py-6">
+          <aside className="w-full border-b border-zinc-200 bg-white lg:w-80 lg:shrink-0 lg:rounded-2xl lg:border lg:shadow-sm">
+            <div className="p-4">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                <input
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-3 text-[13px] outline-none focus:border-[var(--brand-color)] focus:bg-white focus:ring-2 focus:ring-[var(--brand-color)]/15"
+                  placeholder="Search accounts…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
-            ) : filtered.length === 0 ? (
-              <p className="px-3 py-8 text-center text-[13px] text-zinc-500">
-                No accounts match.
-              </p>
-            ) : (
-              filtered.map((c) => (
-                <button
-                  key={c.email}
-                  type="button"
-                  onClick={() => {
-                    setSelectedEmail(c.email);
-                    setTab("account");
-                  }}
-                  className={`mb-1 flex w-full flex-col items-start rounded-xl px-3 py-3 text-left transition ${
-                    selectedEmail === c.email
-                      ? "bg-[var(--secondary-light)] ring-2 ring-[var(--secondary-color)]/30"
-                      : "hover:bg-zinc-50"
-                  }`}
-                >
-                  <span className="font-semibold text-zinc-900">{c.name}</span>
-                  <span className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-500">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    {c.email}
-                  </span>
-                  {c.company ? (
-                    <span className="mt-1 flex items-center gap-1 text-[11px] text-zinc-600">
-                      <Building2 className="h-3 w-3 shrink-0" />
-                      {c.company}
-                    </span>
-                  ) : null}
-                </button>
-              ))
-            )}
-          </nav>
-        </aside>
-
-        <main className="min-h-[50dvh] flex-1 px-4 py-5 lg:rounded-2xl lg:border lg:border-zinc-200 lg:bg-white lg:p-6 lg:shadow-sm">
-          {!contact ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <p className="text-[15px] font-medium text-zinc-700">
-                Select an account or create a new one
-              </p>
-              <p className="mt-2 max-w-md text-[13px] text-zinc-500">
-                Edits save to the hosted API store. Open the plugin in Front on a
-                conversation with that contact&apos;s email to see the same
-                records.
-              </p>
             </div>
-          ) : (
-            <>
-              <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100 pb-4">
-                {TABS.map((t) => (
+            <nav className="max-h-[40dvh] overflow-y-auto px-2 pb-4 lg:max-h-[calc(100dvh-220px)]">
+              {loading ? (
+                <div className="flex justify-center py-12 text-zinc-500">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : filtered.length === 0 ? (
+                <p className="px-3 py-8 text-center text-[13px] text-zinc-500">
+                  No accounts match.
+                </p>
+              ) : (
+                filtered.map((c) => (
                   <button
-                    key={t.id}
+                    key={c.email}
                     type="button"
-                    onClick={() => setTab(t.id)}
-                    className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition ${
-                      tab === t.id
-                        ? "bg-[var(--brand-color)] text-white shadow-sm"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                    onClick={() => {
+                      setSelectedEmail(c.email);
+                      setTab("account");
+                    }}
+                    className={`mb-1 flex w-full flex-col items-start rounded-xl px-3 py-3 text-left transition ${
+                      selectedEmail === c.email
+                        ? "bg-[var(--secondary-light)] ring-2 ring-[var(--secondary-color)]/30"
+                        : "hover:bg-zinc-50"
                     }`}
                   >
-                    {t.label}
+                    <span className="font-semibold text-zinc-900">{c.name}</span>
+                    <span className="mt-0.5 flex items-center gap-1 text-[11px] text-zinc-500">
+                      <Mail className="h-3 w-3 shrink-0" />
+                      {c.email}
+                    </span>
+                    {c.company ? (
+                      <span className="mt-1 flex items-center gap-1 text-[11px] text-zinc-600">
+                        <Building2 className="h-3 w-3 shrink-0" />
+                        {c.company}
+                      </span>
+                    ) : null}
                   </button>
-                ))}
+                ))
+              )}
+            </nav>
+          </aside>
+
+          <main className="min-h-[50dvh] flex-1 px-4 py-5 lg:rounded-2xl lg:border lg:border-zinc-200 lg:bg-white lg:p-6 lg:shadow-sm">
+            {!contact ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <p className="text-[15px] font-medium text-zinc-700">
+                  Select an account or create a new one
+                </p>
+                <p className="mt-2 max-w-md text-[13px] text-zinc-500">
+                  Edits save to the hosted API store. Open the plugin in Front on
+                  a conversation with that contact&apos;s email to see the same
+                  records.
+                </p>
               </div>
-              {busy ? (
-                <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-white/30">
-                  <Loader2 className="h-10 w-10 animate-spin text-[var(--brand-color)]" />
+            ) : (
+              <>
+                <div className="mb-5 flex flex-wrap gap-2 border-b border-zinc-100 pb-4">
+                  {crmTabs.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTab(t.id)}
+                      className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition ${
+                        tab === t.id
+                          ? "bg-[var(--brand-color)] text-white shadow-sm"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
                 </div>
-              ) : null}
-              {tabPanel()}
-            </>
-          )}
-        </main>
-      </div>
+                {busy ? (
+                  <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-white/30">
+                    <Loader2 className="h-10 w-10 animate-spin text-[var(--brand-color)]" />
+                  </div>
+                ) : null}
+                {tabPanel()}
+              </>
+            )}
+          </main>
+        </div>
+      )}
 
       <Modal
         open={!!modal}

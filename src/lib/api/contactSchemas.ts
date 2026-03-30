@@ -91,6 +91,8 @@ const attachmentSchema = z.object({
   uploadedAt: z.string(),
 });
 
+const stringRow = z.record(z.string(), z.string());
+
 export const contactDataSchema = z.object({
   email: z.string().email(),
   name: z.string(),
@@ -107,6 +109,7 @@ export const contactDataSchema = z.object({
   timeline: z.array(timelineSchema),
   attachments: z.array(attachmentSchema),
   invoices: z.array(invoiceSchema),
+  customLists: z.record(z.string(), z.array(stringRow)).optional(),
 });
 
 export const contactPatchSchema = contactDataSchema.partial();
