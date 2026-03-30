@@ -1,0 +1,20 @@
+:root {
+  --brand-color: #003366;
+  --secondary-color: #5bb5b0;
+  --secondary-light: #e8f5f4;
+  --surface: #f4f4f5;
+  --surface-card: #ffffff;
+  --border: #e4e4e7;
+  --text-muted: #71717a;
+  --text: #18181b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
