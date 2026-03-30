@@ -71,6 +71,14 @@ export function Header({
                   Dashboard
                 </Link>
                 <Link
+                  href="/crm"
+                  className="block px-3 py-2 text-[13px] hover:bg-zinc-50"
+                  onClick={() => setOpen(false)}
+                  role="menuitem"
+                >
+                  CRM — full workspace
+                </Link>
+                <Link
                   href="/settings"
                   className="block px-3 py-2 text-[13px] hover:bg-zinc-50"
                   onClick={() => setOpen(false)}

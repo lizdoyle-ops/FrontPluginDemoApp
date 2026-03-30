@@ -39,6 +39,12 @@ Anyone with that URL can view the work order while the token is valid—treat it
 
 **Persistence:** The in-memory store is seeded from mock contacts. If the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored).
 
+### CRM workspace (browser UI)
+
+Full-screen desk at **`/crm`** (also linked from the plugin hamburger as **CRM — full workspace**). It uses the same Bearer token as the API (`NEXT_PUBLIC_DEMO_API_TOKEN` is available to the browser) to list accounts, edit nested records, and create contacts. Changes apply to the **same store** the Front sidebar reads when a conversation email matches.
+
+On **Vercel**, the filesystem is ephemeral: persistence across deploys is not guaranteed unless you add external storage.
+
 ## List contacts
 
 Summaries:
@@ -60,6 +66,17 @@ URL-encode the email:
 
 ```bash
 curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club"
+```
+
+## Create contact (POST)
+
+Body must be a full valid `ContactData` (all nested arrays may be empty). Returns **409** if that email already exists.
+
+```bash
+curl -s -X POST "$BASE/api/contacts" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"invoices":[]}'
 ```
 
 ## Replace contact (PUT)

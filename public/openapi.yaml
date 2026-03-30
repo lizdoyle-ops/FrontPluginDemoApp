@@ -33,6 +33,19 @@ paths:
                     type: array
                     items:
                       type: object
+    post:
+      summary: Create a new contact (409 if email exists)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactData"
+      responses:
+        "201":
+          description: Created contact
+        "409":
+          description: Contact already exists
   /api/contacts/{email}:
     parameters:
       - name: email

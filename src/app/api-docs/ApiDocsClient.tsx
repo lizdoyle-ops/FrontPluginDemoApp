@@ -19,6 +19,12 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
       note: "List full ContactData for every contact.",
     },
     {
+      object: "Contacts",
+      methods: "POST",
+      path: "/api/contacts",
+      note: "Create a new contact (full body; 409 if email exists).",
+    },
+    {
       object: "Contact",
       methods: "GET",
       path: "/api/contacts/{email}",

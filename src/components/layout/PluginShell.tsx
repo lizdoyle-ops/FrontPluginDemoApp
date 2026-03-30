@@ -10,7 +10,7 @@ export function PluginShell({ children }: { children: React.ReactNode }) {
   const { appTitle, logoUrl } = useDemoConfig();
   const [panelDark, setPanelDark] = useState(false);
 
-  if (pathname?.startsWith("/view")) {
+  if (pathname?.startsWith("/view") || pathname?.startsWith("/crm")) {
     return (
       <div className="min-h-dvh w-full bg-zinc-100 text-zinc-900">{children}</div>
     );
