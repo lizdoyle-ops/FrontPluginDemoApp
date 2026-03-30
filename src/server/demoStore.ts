@@ -117,6 +117,15 @@ export function upsertWorkOrder(
   return next;
 }
 
+export function getWorkOrder(
+  contactEmail: string,
+  workOrderId: string,
+): ContactData["workOrders"][number] | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  return c.workOrders.find((w) => w.id === workOrderId);
+}
+
 export function deleteWorkOrder(
   contactEmail: string,
   workOrderId: string,

@@ -97,6 +97,26 @@ paths:
         "404":
           description: Contact not found
   /api/contacts/{email}/work-orders/{id}:
+    get:
+      summary: Get one work order by id
+      responses:
+        "200":
+          description: Work order
+        "404":
+          description: Contact or work order not found
+    post:
+      summary: Create or upsert work order (path id)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOrder"
+      responses:
+        "201":
+          description: Updated contact with work orders
+        "404":
+          description: Contact not found
     put:
       summary: Upsert work order with path id
       requestBody:

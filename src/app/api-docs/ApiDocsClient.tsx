@@ -50,6 +50,18 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
     },
     {
       object: "Work order",
+      methods: "GET",
+      path: "/api/contacts/{email}/work-orders/{id}",
+      note: "Read one work order JSON.",
+    },
+    {
+      object: "Work order",
+      methods: "POST",
+      path: "/api/contacts/{email}/work-orders/{id}",
+      note: "Create or upsert; path id is applied to body (same rules as PUT).",
+    },
+    {
+      object: "Work order",
       methods: "PUT",
       path: "/api/contacts/{email}/work-orders/{id}",
       note: "Upsert work order; path id must match body id.",

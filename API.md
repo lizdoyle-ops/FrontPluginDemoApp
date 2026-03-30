@@ -78,13 +78,28 @@ curl -s -H "$H" -X DELETE "$BASE/api/contacts/someone%40example.com"
 
 ## Work orders
 
-Create or upsert:
+Create or upsert (id in JSON body):
 
 ```bash
 curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/work-orders" \
   -H "$H" \
   -H "Content-Type: application/json" \
   -d '{"id":"wo-new","title":"Garden check","type":"inspection","status":"scheduled"}'
+```
+
+Get one work order:
+
+```bash
+curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club/work-orders/wo-new"
+```
+
+Create or upsert with id in the URL (body `id` must match path after merge):
+
+```bash
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/work-orders/wo-new" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Garden check","type":"inspection","status":"scheduled"}'
 ```
 
 Upsert by id in path:
