@@ -46,8 +46,8 @@ export function CollapsibleSection({
         )}
       </button>
       {open ? (
-        <div className="border-t border-zinc-100 px-3.5 py-3 text-[13px] text-zinc-700">
-          {children}
+        <div className="border-t border-zinc-100 px-3.5 py-3 text-[13px] text-zinc-700 lg:px-4">
+          <div className="min-w-0 overflow-x-auto">{children}</div>
         </div>
       ) : null}
     </div>

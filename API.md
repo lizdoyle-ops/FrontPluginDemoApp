@@ -23,6 +23,20 @@ Authorization: Bearer <token>
 
 The in-app **API docs** page shows the active token. For production, rotate the env value and treat it like a secret.
 
+### Clickable work order (browser)
+
+The REST API expects `Authorization: Bearer …`, so you cannot open `/api/contacts/.../work-orders/...` in a new tab without a client that sends headers. For a **shareable link**, use:
+
+```text
+$BASE/view/work-order?email=leyton%40finalproduction.club&id=wo1&token=<same-token-as-Bearer>
+```
+
+Example with the default demo token (replace if you set `NEXT_PUBLIC_DEMO_API_TOKEN`):
+
+`https://front-plugin-demo-app.vercel.app/view/work-order?email=leyton%40finalproduction.club&id=wo1&token=fp-property-plugin-demo-all-scopes-3194afc2e7d4`
+
+Anyone with that URL can view the work order while the token is valid—treat it like a credential.
+
 **Persistence:** The in-memory store is seeded from mock contacts. If the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored).
 
 ## List contacts

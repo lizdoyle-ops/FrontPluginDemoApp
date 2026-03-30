@@ -106,7 +106,7 @@ export function ApiDocsClient({ token }: { token: string }) {
   }, [token]);
 
   return (
-    <div className="space-y-5 p-3 pb-12 text-[13px] text-zinc-700">
+    <div className="mx-auto max-w-full space-y-5 p-3 pb-12 text-[13px] text-zinc-700 sm:p-4 md:max-w-4xl lg:max-w-5xl lg:p-6">
       <Link href="/" className="text-[12px] font-medium text-[var(--secondary-color)]">
         ← Dashboard
       </Link>

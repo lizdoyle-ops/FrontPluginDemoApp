@@ -87,7 +87,7 @@ export function DataAdmin() {
   };
 
   return (
-    <div className="space-y-3 p-2.5 pb-10">
+    <div className="mx-auto max-w-full space-y-3 p-2.5 pb-10 sm:p-4 lg:max-w-4xl lg:p-6 xl:max-w-5xl">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold text-zinc-900">
           Records (API)

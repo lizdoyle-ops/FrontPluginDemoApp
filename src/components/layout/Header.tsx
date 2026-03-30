@@ -20,7 +20,7 @@ export function Header({
       className="sticky top-0 z-20 text-white shadow-sm"
       style={{ background: "var(--brand-color)" }}
     >
-      <div className="flex min-h-[52px] items-center gap-2 px-3 py-2.5">
+      <div className="flex min-h-[52px] items-center gap-2 px-3 py-2.5 sm:px-4 md:min-h-[56px] md:rounded-t-2xl md:px-5">
         {logoUrl ? (
           <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white/10">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -35,7 +35,7 @@ export function Header({
             LRG
           </div>
         )}
-        <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight text-white">
+        <h1 className="min-w-0 flex-1 text-[15px] font-semibold leading-tight text-white [overflow-wrap:anywhere] line-clamp-2 md:text-[16px]">
           {title}
         </h1>
         <div className="flex shrink-0 items-center gap-0.5">

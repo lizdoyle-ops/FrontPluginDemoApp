@@ -173,37 +173,39 @@ export function ContactDashboard({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-[300px] flex-col gap-3 px-3 pb-8 pt-3">
+    <div className="mx-auto flex w-full max-w-full flex-col gap-3 px-3 pb-8 pt-3 sm:px-4 lg:gap-4 lg:px-6">
       <ContactCard contact={contact} customFields={customContactFields} />
       <button
         type="button"
         onClick={() => void sendSummaryDraft()}
-        className="text-center text-[12px] font-medium text-[var(--secondary-color)] underline-offset-2 hover:underline"
+        className="text-center text-[12px] font-medium text-[var(--secondary-color)] underline-offset-2 hover:underline lg:text-[13px]"
       >
         Email full summary as draft
       </button>
       {draftStatus ? (
         <p className="text-center text-[11px] text-zinc-500">{draftStatus}</p>
       ) : null}
-      {sectionOrder.map((id) => {
-        if (!visibleSections[id]) return null;
-        const meta = sections[id];
-        if (!meta) return null;
-        const Icon = SECTION_ICONS[id];
-        const isInvoices = id === "invoices";
-        return (
-          <CollapsibleSection
-            key={id}
-            icon={Icon}
-            title={SECTION_LABELS[id]}
-            count={meta.count}
-            variant={isInvoices ? "accordion" : "nav"}
-            defaultOpen={false}
-          >
-            {meta.node}
-          </CollapsibleSection>
-        );
-      })}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4 lg:items-start">
+        {sectionOrder.map((id) => {
+          if (!visibleSections[id]) return null;
+          const meta = sections[id];
+          if (!meta) return null;
+          const Icon = SECTION_ICONS[id];
+          const isInvoices = id === "invoices";
+          return (
+            <CollapsibleSection
+              key={id}
+              icon={Icon}
+              title={SECTION_LABELS[id]}
+              count={meta.count}
+              variant={isInvoices ? "accordion" : "nav"}
+              defaultOpen={false}
+            >
+              {meta.node}
+            </CollapsibleSection>
+          );
+        })}
+      </div>
     </div>
   );
 }

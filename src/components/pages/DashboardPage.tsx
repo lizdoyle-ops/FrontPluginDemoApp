@@ -107,7 +107,7 @@ export function DashboardPage() {
 
   if (state.status === "loading") {
     return (
-      <div className="p-4 text-center text-[13px] text-zinc-500">
+      <div className="p-4 text-center text-[13px] text-zinc-500 sm:p-5 lg:px-6">
         Loading conversation…
       </div>
     );
@@ -115,13 +115,15 @@ export function DashboardPage() {
 
   if (state.status === "error") {
     return (
-      <div className="p-4 text-[13px] text-red-700">{state.message}</div>
+      <div className="p-4 text-[13px] text-red-700 sm:p-5 lg:px-6">
+        {state.message}
+      </div>
     );
   }
 
   if (state.status === "no_contact") {
     return (
-      <div className="space-y-3 p-4 text-[13px] text-zinc-600">
+      <div className="space-y-3 p-4 text-[13px] text-zinc-600 sm:p-5 lg:max-w-2xl lg:px-6">
         <p>No matching property contact for this conversation.</p>
         <p className="text-[12px] text-zinc-500">
           Demo emails: {demoKeys}

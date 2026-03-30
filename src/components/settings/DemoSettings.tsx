@@ -164,7 +164,7 @@ export function DemoSettings() {
   };
 
   return (
-    <div className="space-y-3 p-2.5 pb-10">
+    <div className="mx-auto max-w-full space-y-3 p-2.5 pb-10 sm:p-4 lg:max-w-4xl lg:space-y-4 lg:p-6 xl:max-w-5xl">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-[15px] font-semibold text-zinc-900">
           Demo settings
@@ -195,7 +195,7 @@ export function DemoSettings() {
             onChange={(e) => cfg.setCompanyName(e.target.value)}
           />
         </label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <label className="block text-[11px] font-medium text-zinc-500">
             Brand color
             <input
