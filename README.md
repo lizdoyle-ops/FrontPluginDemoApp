@@ -24,23 +24,29 @@ Open [http://localhost:3000](http://localhost:3000). Outside Front, append a dem
 - `sarah@zestymedia.club` — Sarah Martinez  
 - `elias@auditlawyer.club` — Elias Omorin  
 
-## Push to GitHub
+## Repository
 
-GitHub stores your source code. The **HTTPS URL Front loads in the iframe** must come from a host that serves the built app (recommended: **Vercel** connected to this repo).
+Source repo: **[github.com/lizdoyle-ops/FrontPluginDemoApp](https://github.com/lizdoyle-ops/FrontPluginDemoApp)**.
 
-1. Create a new empty repository on [GitHub](https://github.com/new) (any name, e.g. `front-property-plugin`). Do **not** add a README or `.gitignore` (this project already has them).
+GitHub holds the code only. The **HTTPS URL Front uses in the iframe** should be your **deployed** app (e.g. Vercel), not the raw `github.com` page.
 
-2. In the project folder, connect and push (replace `YOUR_USER` and `YOUR_REPO`):
+### Push updates from your machine
+
+If `origin` is not set yet:
 
 ```bash
 cd /path/to/FrontPluginDemoApp
-git init
-git add .
-git commit -m "Initial commit: Front property CRM plugin"
-git branch -M main
-git remote add origin https://github.com/YOUR_USER/YOUR_REPO.git
+git remote add origin https://github.com/lizdoyle-ops/FrontPluginDemoApp.git
 git push -u origin main
 ```
+
+If `origin` already exists, run:
+
+```bash
+git push -u origin main
+```
+
+Use [GitHub authentication](https://docs.github.com/en/get-started/git-basics/about-remote-repositories#cloning-with-https-urls) (browser login, PAT, or SSH) when prompted.
 
 ## Deploy a public URL (Vercel + GitHub)
 
