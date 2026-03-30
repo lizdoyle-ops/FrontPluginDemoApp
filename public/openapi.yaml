@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: Property CRM Demo API
+  version: 1.0.0
+  description: |
+    Demo REST API for the Property Management Front plugin. No authentication in development;
+    add auth before production use.
+servers:
+  - url: http://localhost:3000
+    description: Local Next.js dev
+paths:
+  /api/contacts:
+    get:
+      summary: List contacts
+      parameters:
+        - name: full
+          in: query
+          schema:
+            type: string
+            enum: ["1"]
+          description: If `full=1`, returns full ContactData objects; otherwise summaries only.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      type: object
+  /api/contacts/{email}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+        description: URL-encoded email address
+    get:
+      summary: Get one contact
+      responses:
+        "200":
+          description: ContactData
+        "404":
+          description: Not found
+    put:
+      summary: Replace contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactData"
+      responses:
+        "200":
+          description: Updated contact
+        "400":
+          description: Validation error
+    patch:
+      summary: Shallow merge contact fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Partial ContactData
+      responses:
+        "200":
+          description: Updated contact
+        "404":
+          description: Not found
+    delete:
+      summary: Delete contact from demo store
+      responses:
+        "200":
+          description: Deleted
+        "404":
+          description: Not found
+  /api/contacts/{email}/work-orders:
+    post:
+      summary: Create or upsert work order (by body id)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOrder"
+      responses:
+        "201":
+          description: Updated contact with work orders
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/work-orders/{id}:
+    put:
+      summary: Upsert work order with path id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOrder"
+      responses:
+        "200":
+          description: Updated contact
+    delete:
+      summary: Remove work order
+      responses:
+        "200":
+          description: Updated contact
+  /api/contacts/{email}/invoices:
+    post:
+      summary: Create or upsert invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invoice"
+      responses:
+        "201":
+          description: Updated contact
+  /api/contacts/{email}/invoices/{id}:
+    put:
+      summary: Upsert invoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invoice"
+      responses:
+        "200":
+          description: Updated contact
+    delete:
+      summary: Remove invoice
+      responses:
+        "200":
+          description: Updated contact
+components:
+  schemas:
+    WorkOrder:
+      type: object
+      required: [id, title, type, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        type:
+          type: string
+          enum: [maintenance, repair, inspection, cleaning]
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed]
+        scheduledFor: { type: string }
+        propertyId: { type: string }
+    Invoice:
+      type: object
+      required: [id, reference, amount, currency, status]
+      properties:
+        id: { type: string }
+        reference: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status:
+          type: string
+          enum: [draft, pending, paid, overdue]
+        dueDate: { type: string }
+    ContactData:
+      type: object
+      required:
+        - email
+        - name
+        - company
+        - role
+        - segment
+        - tags
+        - properties
+        - quotes
+        - inquiries
+        - cases
+        - workOrders
+        - contracts
+        - timeline
+        - attachments
+        - invoices
+      properties:
+        email: { type: string, format: email }
+        name: { type: string }
+        company: { type: string }
+        role: { type: string }
+        segment: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        properties:
+          type: array
+          items: { type: object }
+        quotes:
+          type: array
+          items: { type: object }
+        inquiries:
+          type: array
+          items: { type: object }
+        cases:
+          type: array
+          items: { type: object }
+        workOrders:
+          type: array
+          items: { $ref: "#/components/schemas/WorkOrder" }
+        contracts:
+          type: array
+          items: { type: object }
+        timeline:
+          type: array
+          items: { type: object }
+        attachments:
+          type: array
+          items: { type: object }
+        invoices:
+          type: array
+          items: { $ref: "#/components/schemas/Invoice" }
