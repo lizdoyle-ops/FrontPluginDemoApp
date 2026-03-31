@@ -150,8 +150,50 @@ curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/work
 
 ## Invoices
 
-Same pattern under `/invoices` and `/invoices/{id}`.
+- **POST** `/api/contacts/{email}/invoices` — create or upsert (include `id` in JSON).
+- **GET** `/api/contacts/{email}/invoices/{id}` — fetch one invoice.
+- **PUT** / **DELETE** `/api/contacts/{email}/invoices/{id}` — upsert or remove (same as before).
+
+## Nested objects (create + fetch)
+
+Each top-level array on `ContactData` has the same pattern: **POST** to create/upsert by **`id` in the body**, **GET** `.../{id}` to fetch one item. All require `Authorization: Bearer …`. Responses for POST are the **full updated `ContactData`** (same as work orders and invoices).
+
+| Collection   | POST (upsert)                                      | GET (one by id)                                      |
+|-------------|-----------------------------------------------------|------------------------------------------------------|
+| Cases       | `/api/contacts/{email}/cases`                       | `/api/contacts/{email}/cases/{id}`                   |
+| Properties  | `/api/contacts/{email}/properties`                  | `/api/contacts/{email}/properties/{id}`              |
+| Quotes      | `/api/contacts/{email}/quotes`                      | `/api/contacts/{email}/quotes/{id}`                  |
+| Inquiries   | `/api/contacts/{email}/inquiries`                   | `/api/contacts/{email}/inquiries/{id}`               |
+| Contracts   | `/api/contacts/{email}/contracts`                   | `/api/contacts/{email}/contracts/{id}`               |
+| Timeline    | `/api/contacts/{email}/timeline`                    | `/api/contacts/{email}/timeline/{id}`                |
+| Attachments | `/api/contacts/{email}/attachments`                 | `/api/contacts/{email}/attachments/{id}`             |
+| Work orders | `/api/contacts/{email}/work-orders`                 | `/api/contacts/{email}/work-orders/{id}`             |
+| Invoices    | `/api/contacts/{email}/invoices`                    | `/api/contacts/{email}/invoices/{id}`                |
+
+**Custom lists** (rows are maps of string → string; `listId` is the Admin custom object id, e.g. `obj-123`):
+
+- **POST** `/api/contacts/{email}/custom-lists/{listId}/rows` — append one row (JSON body: keys = field keys, values = strings).
+- **GET** `/api/contacts/{email}/custom-lists/{listId}/rows/{index}` — fetch row at zero-based `index` (response: `{ listId, index, row }`).
+
+Example — create a case:
+
+```bash
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/cases" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"case-api-1","subject":"API test","status":"open","openedAt":"2026-03-30","priority":"medium"}'
+```
+
+Fetch that case:
+
+```bash
+curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club/cases/case-api-1"
+```
+
+Shapes match Zod in `src/lib/api/contactSchemas.ts`.
 
 ## OpenAPI
 
 Machine-readable spec: [public/openapi.yaml](public/openapi.yaml) (served as `/openapi.yaml`).
+
+In the app, open **CRM workspace** → **API docs** tab (`/crm?tab=api`) for the bearer token and endpoint table. The legacy path `/api-docs` redirects there.

@@ -104,40 +104,80 @@ export function deleteContact(email: string): boolean {
   return true;
 }
 
+/** Keys for contact arrays keyed by string `id` on each item. */
+export type NestedIdCollectionKey =
+  | "properties"
+  | "quotes"
+  | "inquiries"
+  | "cases"
+  | "workOrders"
+  | "contracts"
+  | "timeline"
+  | "attachments"
+  | "invoices";
+
+export function upsertNestedContactItem<K extends NestedIdCollectionKey>(
+  contactEmail: string,
+  key: K,
+  item: ContactData[K][number],
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const list = c[key] as { id: string }[];
+  const rest = list.filter((x) => x.id !== (item as { id: string }).id);
+  const next = { ...c, [key]: [...rest, item] } as ContactData;
+  putContact(c.email, next);
+  return next;
+}
+
+export function getNestedContactItem<K extends NestedIdCollectionKey>(
+  contactEmail: string,
+  key: K,
+  id: string,
+): ContactData[K][number] | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  return (c[key] as { id: string }[]).find((x) => x.id === id) as
+    | ContactData[K][number]
+    | undefined;
+}
+
+export function deleteNestedContactItem(
+  contactEmail: string,
+  key: NestedIdCollectionKey,
+  id: string,
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const list = c[key] as { id: string }[];
+  const next = {
+    ...c,
+    [key]: list.filter((x) => x.id !== id),
+  } as ContactData;
+  putContact(c.email, next);
+  return next;
+}
+
 /** Work order nested CRUD */
 export function upsertWorkOrder(
   contactEmail: string,
   workOrder: ContactData["workOrders"][number],
 ): ContactData | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  const rest = c.workOrders.filter((w) => w.id !== workOrder.id);
-  const next = { ...c, workOrders: [...rest, workOrder] };
-  putContact(c.email, next);
-  return next;
+  return upsertNestedContactItem(contactEmail, "workOrders", workOrder);
 }
 
 export function getWorkOrder(
   contactEmail: string,
   workOrderId: string,
 ): ContactData["workOrders"][number] | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  return c.workOrders.find((w) => w.id === workOrderId);
+  return getNestedContactItem(contactEmail, "workOrders", workOrderId);
 }
 
 export function deleteWorkOrder(
   contactEmail: string,
   workOrderId: string,
 ): ContactData | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  const next = {
-    ...c,
-    workOrders: c.workOrders.filter((w) => w.id !== workOrderId),
-  };
-  putContact(c.email, next);
-  return next;
+  return deleteNestedContactItem(contactEmail, "workOrders", workOrderId);
 }
 
 /** Invoice nested CRUD */
@@ -145,26 +185,48 @@ export function upsertInvoice(
   contactEmail: string,
   invoice: ContactData["invoices"][number],
 ): ContactData | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  const rest = c.invoices.filter((i) => i.id !== invoice.id);
-  const next = { ...c, invoices: [...rest, invoice] };
-  putContact(c.email, next);
-  return next;
+  return upsertNestedContactItem(contactEmail, "invoices", invoice);
+}
+
+export function getInvoice(
+  contactEmail: string,
+  invoiceId: string,
+): ContactData["invoices"][number] | undefined {
+  return getNestedContactItem(contactEmail, "invoices", invoiceId);
 }
 
 export function deleteInvoice(
   contactEmail: string,
   invoiceId: string,
 ): ContactData | undefined {
+  return deleteNestedContactItem(contactEmail, "invoices", invoiceId);
+}
+
+/** Custom list rows (Admin-defined lists); rows are string maps without stable ids. */
+export function appendCustomListRow(
+  contactEmail: string,
+  listId: string,
+  row: Record<string, string>,
+): ContactData | undefined {
   const c = getContact(contactEmail);
   if (!c) return undefined;
-  const next = {
-    ...c,
-    invoices: c.invoices.filter((i) => i.id !== invoiceId),
-  };
+  const lists = { ...(c.customLists ?? {}) };
+  lists[listId] = [...(lists[listId] ?? []), row];
+  const next = { ...c, customLists: lists };
   putContact(c.email, next);
   return next;
+}
+
+export function getCustomListRow(
+  contactEmail: string,
+  listId: string,
+  index: number,
+): Record<string, string> | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const rows = c.customLists?.[listId];
+  if (!rows || index < 0 || index >= rows.length) return undefined;
+  return rows[index];
 }
 
 initDemoStoreFromDisk();

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  BookOpen,
   Building2,
   ChevronLeft,
   LayoutGrid,
@@ -22,9 +23,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { ApiDocsClient } from "@/components/api-docs/ApiDocsClient";
 import { AdminCentre } from "@/components/crm/AdminCentre";
 import { CustomListsEditor } from "@/components/crm/CustomListsEditor";
 import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
+import { getDemoApiToken } from "@/lib/demoApiToken";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
 import { emptyContact } from "@/lib/crm/emptyContact";
 import type { ContactData } from "@/types/contact";
@@ -128,7 +131,9 @@ export function CrmHomeClient() {
   const cfg = useDemoConfig();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [workspace, setWorkspace] = useState<"accounts" | "admin">("accounts");
+  const [workspace, setWorkspace] = useState<"accounts" | "admin" | "api">(
+    "accounts",
+  );
   const [contacts, setContacts] = useState<ContactData[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [contact, setContact] = useState<ContactData | null>(null);
@@ -147,7 +152,10 @@ export function CrmHomeClient() {
   const enc = (e: string) => encodeURIComponent(e);
 
   useEffect(() => {
-    setWorkspace(searchParams.get("tab") === "admin" ? "admin" : "accounts");
+    const t = searchParams.get("tab");
+    if (t === "admin") setWorkspace("admin");
+    else if (t === "api") setWorkspace("api");
+    else setWorkspace("accounts");
   }, [searchParams]);
 
   useEffect(() => {
@@ -157,10 +165,12 @@ export function CrmHomeClient() {
   }, [tab, cfg.customObjectDefinitions.length]);
 
   const setWorkspaceRoute = useCallback(
-    (w: "accounts" | "admin") => {
+    (w: "accounts" | "admin" | "api") => {
       setWorkspace(w);
       const path = "/crm";
-      router.replace(w === "admin" ? `${path}?tab=admin` : path);
+      if (w === "admin") router.replace(`${path}?tab=admin`);
+      else if (w === "api") router.replace(`${path}?tab=api`);
+      else router.replace(path);
     },
     [router],
   );
@@ -1530,6 +1540,18 @@ export function CrmHomeClient() {
                 <Settings2 className="h-3.5 w-3.5" strokeWidth={2} />
                 Admin centre
               </button>
+              <button
+                type="button"
+                onClick={() => setWorkspaceRoute("api")}
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition ${
+                  workspace === "api"
+                    ? "bg-white text-zinc-900 shadow-sm"
+                    : "text-zinc-600 hover:text-zinc-900"
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5" strokeWidth={2} />
+                API docs
+              </button>
             </nav>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -1574,7 +1596,13 @@ export function CrmHomeClient() {
 
       {workspace === "admin" ? (
         <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-10 lg:py-6">
-          <AdminCentre />
+          <AdminCentre onToast={showToast} />
+        </div>
+      ) : workspace === "api" ? (
+        <div className="mx-auto max-w-[1600px] px-4 py-5 sm:px-6 lg:px-10 lg:py-6">
+          <div className="min-h-[50dvh] lg:rounded-2xl lg:border lg:border-zinc-200 lg:bg-white lg:p-6 lg:shadow-sm">
+            <ApiDocsClient token={getDemoApiToken()} variant="crm" />
+          </div>
         </div>
       ) : (
         <div className="mx-auto flex max-w-[1600px] gap-0 lg:gap-6 lg:px-6 lg:py-6">

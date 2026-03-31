@@ -73,7 +73,7 @@ Use [GitHub authentication](https://docs.github.com/en/get-started/git-basics/ab
 
 **Note:** The demo API writes to the server filesystem only when `/data` exists on the host; on Vercel the filesystem is ephemeral, so API mutations may not persist across deploys—mock data and `localStorage` still work for the sidebar UI.
 
-**API auth:** All `/api/contacts/*` routes require `Authorization: Bearer <token>`. The default token is built in; override with `NEXT_PUBLIC_DEMO_API_TOKEN` in Vercel (see [.env.example](.env.example)). The hamburger menu links to **API docs · token** (`/api-docs`).
+**API auth:** All `/api/contacts/*` routes require `Authorization: Bearer <token>`. The default token is built in; override with `NEXT_PUBLIC_DEMO_API_TOKEN` in Vercel (see [.env.example](.env.example)). Open **CRM — full workspace** → **API docs** tab (`/crm?tab=api`; `/api-docs` redirects there).
 
 ## Front plugin setup
 
@@ -82,7 +82,7 @@ Use [GitHub authentication](https://docs.github.com/en/get-started/git-basics/ab
 
 ## API
 
-See [API.md](API.md), `/api-docs` in the app (token + CRUD table), and [public/openapi.yaml](public/openapi.yaml).
+See [API.md](API.md), CRM workspace **API docs** tab (token + CRUD table), and [public/openapi.yaml](public/openapi.yaml).
 
 ## Stack
 

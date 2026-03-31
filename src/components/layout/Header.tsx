@@ -86,14 +86,6 @@ export function Header({
                 >
                   Admin centre
                 </Link>
-                <Link
-                  href="/api-docs"
-                  className="block px-3 py-2 text-[13px] hover:bg-zinc-50"
-                  onClick={() => setOpen(false)}
-                  role="menuitem"
-                >
-                  API docs · token
-                </Link>
               </nav>
             ) : null}
           </div>

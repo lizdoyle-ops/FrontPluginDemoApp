@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const propertySchema = z.object({
+export const propertySchema = z.object({
   id: z.string(),
   address: z.string(),
   city: z.string(),
@@ -10,7 +10,7 @@ const propertySchema = z.object({
   notes: z.string().optional(),
 });
 
-const quoteSchema = z.object({
+export const quoteSchema = z.object({
   id: z.string(),
   title: z.string(),
   amount: z.number(),
@@ -19,14 +19,14 @@ const quoteSchema = z.object({
   validUntil: z.string().optional(),
 });
 
-const inquirySchema = z.object({
+export const inquirySchema = z.object({
   id: z.string(),
   subject: z.string(),
   date: z.string(),
   channel: z.string(),
 });
 
-const caseSchema = z.object({
+export const caseSchema = z.object({
   id: z.string(),
   subject: z.string(),
   status: z.enum(["open", "in_progress", "resolved"]),
@@ -43,7 +43,7 @@ export const workOrderSchema = z.object({
   propertyId: z.string().optional(),
 });
 
-const contractSchema = z.object({
+export const contractSchema = z.object({
   id: z.string(),
   title: z.string(),
   type: z.enum(["lease", "service", "vendor", "corporate"]),
@@ -68,7 +68,7 @@ export const invoiceSchema = z.object({
   vendorName: z.string().optional(),
 });
 
-const timelineSchema = z.object({
+export const timelineSchema = z.object({
   id: z.string(),
   type: z.enum([
     "inquiry",
@@ -83,7 +83,7 @@ const timelineSchema = z.object({
   detail: z.string().optional(),
 });
 
-const attachmentSchema = z.object({
+export const attachmentSchema = z.object({
   id: z.string(),
   name: z.string(),
   category: z.string(),
@@ -91,7 +91,9 @@ const attachmentSchema = z.object({
   uploadedAt: z.string(),
 });
 
-const stringRow = z.record(z.string(), z.string());
+export const customListRowSchema = z.record(z.string(), z.string());
+
+const stringRow = customListRowSchema;
 
 export const contactDataSchema = z.object({
   email: z.string().email(),

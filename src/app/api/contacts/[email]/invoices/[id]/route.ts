@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import { invoiceSchema } from "@/lib/api/contactSchemas";
+import { getNestedItemById } from "@/lib/api/nestedContactRoutes";
 import {
   deleteInvoice,
   getContact,
@@ -15,6 +16,14 @@ function decodeEmail(raw: string) {
   } catch {
     return raw;
   }
+}
+
+export async function GET(
+  request: Request,
+  context: { params: Promise<RouteParams> },
+) {
+  const { email: raw, id } = await context.params;
+  return getNestedItemById(request, raw, id, "invoices", "Invoice");
 }
 
 export async function PUT(
