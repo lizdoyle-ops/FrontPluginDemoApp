@@ -49,6 +49,66 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
       note: "Remove contact from the demo store.",
     },
     {
+      object: "Cases",
+      methods: "POST",
+      path: "/api/contacts/{email}/cases",
+      note: "Create or upsert a case: JSON body must include id, subject, status, openedAt.",
+    },
+    {
+      object: "Case",
+      methods: "GET",
+      path: "/api/contacts/{email}/cases/{id}",
+      note: "Read one case by stable id (e.g. c1). Returns Case JSON only.",
+    },
+    {
+      object: "Case",
+      methods: "POST",
+      path: "/api/contacts/{email}/cases/{id}",
+      note: "Upsert this id: path id is merged onto body; returns full updated contact (201).",
+    },
+    {
+      object: "Case",
+      methods: "PUT",
+      path: "/api/contacts/{email}/cases/{id}",
+      note: "Same upsert as POST; returns full contact (200).",
+    },
+    {
+      object: "Case",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/cases/{id}",
+      note: "Remove the case with this id from the contact.",
+    },
+    {
+      object: "Properties",
+      methods: "POST",
+      path: "/api/contacts/{email}/properties",
+      note: "Upsert property (id in body).",
+    },
+    {
+      object: "Property",
+      methods: "GET",
+      path: "/api/contacts/{email}/properties/{id}",
+      note: "Read one property JSON.",
+    },
+    {
+      object: "Property",
+      methods: "POST",
+      path: "/api/contacts/{email}/properties/{id}",
+      note: "Upsert; path id merged onto body (201).",
+    },
+    {
+      object: "Property",
+      methods: "PUT",
+      path: "/api/contacts/{email}/properties/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Property",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/properties/{id}",
+      note: "Delete property by id.",
+    },
+    {
       object: "Work orders",
       methods: "POST",
       path: "/api/contacts/{email}/work-orders",
@@ -64,13 +124,13 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
       object: "Work order",
       methods: "POST",
       path: "/api/contacts/{email}/work-orders/{id}",
-      note: "Create or upsert; path id is applied to body (same rules as PUT).",
+      note: "Upsert; path id applied to body (201).",
     },
     {
       object: "Work order",
       methods: "PUT",
       path: "/api/contacts/{email}/work-orders/{id}",
-      note: "Upsert work order; path id must match body id.",
+      note: "Upsert (200).",
     },
     {
       object: "Work order",
@@ -92,15 +152,165 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
     },
     {
       object: "Invoice",
+      methods: "POST",
+      path: "/api/contacts/{email}/invoices/{id}",
+      note: "Upsert; path id merged onto body (201).",
+    },
+    {
+      object: "Invoice",
       methods: "PUT",
       path: "/api/contacts/{email}/invoices/{id}",
-      note: "Upsert invoice; path id must match body id.",
+      note: "Upsert invoice (200).",
     },
     {
       object: "Invoice",
       methods: "DELETE",
       path: "/api/contacts/{email}/invoices/{id}",
       note: "Delete invoice by id.",
+    },
+    {
+      object: "Quotes",
+      methods: "POST",
+      path: "/api/contacts/{email}/quotes",
+      note: "Upsert quote (id in body).",
+    },
+    {
+      object: "Quote",
+      methods: "GET",
+      path: "/api/contacts/{email}/quotes/{id}",
+      note: "Read one quote JSON.",
+    },
+    {
+      object: "Quote",
+      methods: "POST",
+      path: "/api/contacts/{email}/quotes/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Quote",
+      methods: "PUT",
+      path: "/api/contacts/{email}/quotes/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Quote",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/quotes/{id}",
+      note: "Delete quote by id.",
+    },
+    {
+      object: "Inquiries",
+      methods: "POST",
+      path: "/api/contacts/{email}/inquiries",
+      note: "Upsert inquiry (id in body).",
+    },
+    {
+      object: "Inquiry",
+      methods: "GET",
+      path: "/api/contacts/{email}/inquiries/{id}",
+      note: "Read one inquiry JSON.",
+    },
+    {
+      object: "Inquiry",
+      methods: "POST",
+      path: "/api/contacts/{email}/inquiries/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Inquiry",
+      methods: "PUT",
+      path: "/api/contacts/{email}/inquiries/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Inquiry",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/inquiries/{id}",
+      note: "Delete inquiry by id.",
+    },
+    {
+      object: "Contracts",
+      methods: "POST",
+      path: "/api/contacts/{email}/contracts",
+      note: "Upsert contract (id in body).",
+    },
+    {
+      object: "Contract",
+      methods: "GET",
+      path: "/api/contacts/{email}/contracts/{id}",
+      note: "Read one contract JSON.",
+    },
+    {
+      object: "Contract",
+      methods: "POST",
+      path: "/api/contacts/{email}/contracts/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Contract",
+      methods: "PUT",
+      path: "/api/contacts/{email}/contracts/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Contract",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/contracts/{id}",
+      note: "Delete contract by id.",
+    },
+    {
+      object: "Attachments",
+      methods: "POST",
+      path: "/api/contacts/{email}/attachments",
+      note: "Upsert attachment (id in body).",
+    },
+    {
+      object: "Attachment",
+      methods: "GET",
+      path: "/api/contacts/{email}/attachments/{id}",
+      note: "Read one attachment JSON.",
+    },
+    {
+      object: "Attachment",
+      methods: "POST",
+      path: "/api/contacts/{email}/attachments/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Attachment",
+      methods: "PUT",
+      path: "/api/contacts/{email}/attachments/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Attachment",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/attachments/{id}",
+      note: "Delete attachment by id.",
+    },
+    {
+      object: "Timeline",
+      methods: "POST",
+      path: "/api/contacts/{email}/timeline",
+      note: "Append one timeline event (no id on events).",
+    },
+    {
+      object: "Timeline event",
+      methods: "GET",
+      path: "/api/contacts/{email}/timeline/{index}",
+      note: "Read one event by zero-based index; response { index, event }.",
+    },
+    {
+      object: "Custom list row",
+      methods: "POST",
+      path: "/api/contacts/{email}/custom-lists/{listId}/rows",
+      note: "Append a row (listId = admin object id). Body is field map + optional id.",
+    },
+    {
+      object: "Custom list row",
+      methods: "GET",
+      path: "/api/contacts/{email}/custom-lists/{listId}/rows/{index}",
+      note: "Read row by zero-based index; response { listId, index, row }.",
     },
   ];
 
@@ -175,10 +385,16 @@ export function ApiDocsClient({
 
       <section className="rounded-xl border border-zinc-200 bg-white p-3 shadow-sm">
         <h2 className="mb-2 text-[13px] font-semibold text-zinc-900">
-          CRUD endpoints by object
+          Endpoints by object (GET/POST per record)
         </h2>
+        <p className="mb-2 text-[11px] leading-relaxed text-zinc-500">
+          For cases, properties, quotes, inquiries, contracts, attachments, work orders, and
+          invoices: use <strong>GET …/&#123;id&#125;</strong> to read one item and{" "}
+          <strong>POST</strong> or <strong>PUT</strong> <strong>…/&#123;id&#125;</strong> to upsert
+          (path id is merged into the JSON body). <strong>Cases</strong> use the same pattern.
+        </p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[280px] border-collapse text-left text-[11px]">
+          <table className="w-full min-w-[720px] border-collapse text-left text-[11px]">
             <thead>
               <tr className="border-b border-zinc-200 text-zinc-500">
                 <th className="py-2 pr-2 font-medium">Object</th>

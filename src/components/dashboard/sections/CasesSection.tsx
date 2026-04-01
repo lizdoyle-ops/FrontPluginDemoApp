@@ -1,5 +1,6 @@
 import type { Case } from "@/types/contact";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 const statusVariant: Record<Case["status"], "danger" | "warning" | "success"> = {
   open: "danger",
@@ -21,6 +22,7 @@ export function CasesSection({ items }: { items: Case[] }) {
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
+                  <RecordIdLine id={c.id} />
                   <div className="font-medium text-zinc-900">{c.subject}</div>
                   <div className="text-[11px] text-zinc-500">
                     Opened {c.openedAt}

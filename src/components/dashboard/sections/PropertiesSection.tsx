@@ -1,5 +1,6 @@
 import type { Property } from "@/types/contact";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 const statusVariant: Record<Property["status"], "success" | "warning" | "default"> = {
   active: "success",
@@ -20,6 +21,7 @@ export function PropertiesSection({ items }: { items: Property[] }) {
         >
           <div className="flex items-start justify-between gap-2">
             <div>
+              <RecordIdLine id={p.id} />
               <div className="font-medium text-zinc-900">{p.address}</div>
               <div className="text-zinc-500">
                 {p.city} {p.postcode}

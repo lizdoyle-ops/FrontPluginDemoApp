@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import { invoiceSchema } from "@/lib/api/contactSchemas";
-import { getNestedItemById } from "@/lib/api/nestedContactRoutes";
 import {
-  deleteInvoice,
-  getContact,
-  upsertInvoice,
-} from "@/server/demoStore";
+  getNestedItemById,
+  upsertNestedItemByPathId,
+} from "@/lib/api/nestedContactRoutes";
+import { deleteInvoice, getContact, upsertInvoice } from "@/server/demoStore";
 
 type RouteParams = { email: string; id: string };
 
@@ -24,6 +23,21 @@ export async function GET(
 ) {
   const { email: raw, id } = await context.params;
   return getNestedItemById(request, raw, id, "invoices", "Invoice");
+}
+
+export async function POST(
+  request: Request,
+  context: { params: Promise<RouteParams> },
+) {
+  const { email: raw, id } = await context.params;
+  return upsertNestedItemByPathId(
+    request,
+    raw,
+    id,
+    "invoices",
+    invoiceSchema,
+    201,
+  );
 }
 
 export async function PUT(

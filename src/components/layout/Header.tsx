@@ -59,7 +59,7 @@ export function Header({
             </button>
             {open ? (
               <nav
-                className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-zinc-200 bg-white py-1 text-zinc-800 shadow-lg"
+                className="absolute right-0 top-full z-30 mt-1 min-w-[13.75rem] rounded-lg border border-zinc-200 bg-white py-1 text-zinc-800 shadow-lg"
                 role="menu"
               >
                 <Link
@@ -74,13 +74,15 @@ export function Header({
                   href="/crm"
                   target="_blank"
                   rel="noopener noreferrer"
+                  title="Opens in a new browser tab"
+                  aria-label="Back Office View (opens in new tab)"
                   className="group flex items-center justify-between gap-2 px-3 py-2 text-[13px] hover:bg-zinc-50"
                   onClick={() => setOpen(false)}
                   role="menuitem"
                 >
                   <span>Back Office View</span>
                   <ExternalLink
-                    className="h-3.5 w-3.5 shrink-0 text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="h-3.5 w-3.5 shrink-0 text-zinc-400 transition-colors group-hover:text-zinc-700"
                     aria-hidden
                   />
                 </Link>

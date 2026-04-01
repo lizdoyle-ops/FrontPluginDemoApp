@@ -2,6 +2,7 @@
 
 import { Building2, Briefcase, Mail, Tag, User } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 import type { ContactData } from "@/types/contact";
 
 export function ContactCard({ contact }: { contact: ContactData }) {
@@ -23,6 +24,7 @@ export function ContactCard({ contact }: { contact: ContactData }) {
           {initial}
         </div>
         <div className="min-w-0 flex-1">
+          <RecordIdLine id={contact.email} />
           <div className="text-[16px] font-bold leading-tight text-zinc-900">
             {firstName}
           </div>

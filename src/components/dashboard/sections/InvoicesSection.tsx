@@ -1,6 +1,7 @@
 import { Send } from "lucide-react";
 import type { Invoice } from "@/types/contact";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 const statusVariant: Record<
   Invoice["status"],
@@ -58,9 +59,12 @@ export function InvoicesSection({
             className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
           >
             <div className="flex items-start justify-between gap-2 border-b border-zinc-100 px-3 py-2.5">
-              <h4 className="text-[13px] font-bold leading-snug text-zinc-900">
-                {title}
-              </h4>
+              <div className="min-w-0">
+                <RecordIdLine id={inv.id} />
+                <h4 className="text-[13px] font-bold leading-snug text-zinc-900">
+                  {title}
+                </h4>
+              </div>
               <Badge
                 variant={statusVariant[inv.status]}
                 className="shrink-0 capitalize"

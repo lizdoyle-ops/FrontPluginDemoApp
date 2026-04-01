@@ -152,23 +152,29 @@ curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/work
 
 - **POST** `/api/contacts/{email}/invoices` — create or upsert (include `id` in JSON).
 - **GET** `/api/contacts/{email}/invoices/{id}` — fetch one invoice.
-- **PUT** / **DELETE** `/api/contacts/{email}/invoices/{id}` — upsert or remove (same as before).
+- **POST** / **PUT** / **DELETE** `/api/contacts/{email}/invoices/{id}` — upsert with path id merged onto JSON (POST → 201, PUT → 200) or remove.
 
 ## Nested objects (create + fetch)
 
-Each top-level array on `ContactData` has the same pattern: **POST** to create/upsert by **`id` in the body**, **GET** `.../{id}` to fetch one item. All require `Authorization: Bearer …`. Responses for POST are the **full updated `ContactData`** (same as work orders and invoices).
+Each nested type supports:
 
-| Collection   | POST (upsert)                                      | GET (one by id)                                      |
-|-------------|-----------------------------------------------------|------------------------------------------------------|
-| Cases       | `/api/contacts/{email}/cases`                       | `/api/contacts/{email}/cases/{id}`                   |
-| Properties  | `/api/contacts/{email}/properties`                  | `/api/contacts/{email}/properties/{id}`              |
-| Quotes      | `/api/contacts/{email}/quotes`                      | `/api/contacts/{email}/quotes/{id}`                  |
-| Inquiries   | `/api/contacts/{email}/inquiries`                   | `/api/contacts/{email}/inquiries/{id}`               |
-| Contracts   | `/api/contacts/{email}/contracts`                   | `/api/contacts/{email}/contracts/{id}`               |
-| Timeline    | `/api/contacts/{email}/timeline`                    | `/api/contacts/{email}/timeline/{index}` (zero-based) |
-| Attachments | `/api/contacts/{email}/attachments`                 | `/api/contacts/{email}/attachments/{id}`             |
-| Work orders | `/api/contacts/{email}/work-orders`                 | `/api/contacts/{email}/work-orders/{id}`             |
-| Invoices    | `/api/contacts/{email}/invoices`                    | `/api/contacts/{email}/invoices/{id}`                |
+1. **POST** collection URL — upsert using **`id` inside the JSON body**.
+2. **GET** `.../{id}` — return **only that record** as JSON.
+3. **POST** / **PUT** `.../{id}` — upsert that id (path id overrides `body.id`); response is the **full updated `ContactData`**. **DELETE** `.../{id}` removes the record.
+
+All require `Authorization: Bearer …`. Timeline uses **index** instead of id; custom lists use **row index**.
+
+| Collection   | POST (body id)                         | GET one                         | POST/PUT/DELETE one id                                      |
+|-------------|---------------------------------------|---------------------------------|-------------------------------------------------------------|
+| Cases       | `.../cases`                           | `.../cases/{id}`                | `.../cases/{id}`                                            |
+| Properties  | `.../properties`                     | `.../properties/{id}`           | `.../properties/{id}`                                       |
+| Quotes      | `.../quotes`                         | `.../quotes/{id}`               | `.../quotes/{id}`                                           |
+| Inquiries   | `.../inquiries`                     | `.../inquiries/{id}`            | `.../inquiries/{id}`                                        |
+| Contracts   | `.../contracts`                     | `.../contracts/{id}`           | `.../contracts/{id}`                                        |
+| Timeline    | `.../timeline` (append, no id)       | `.../timeline/{index}`          | —                                                           |
+| Attachments | `.../attachments`                   | `.../attachments/{id}`          | `.../attachments/{id}`                                      |
+| Work orders | `.../work-orders`                   | `.../work-orders/{id}`          | `.../work-orders/{id}`                                      |
+| Invoices    | `.../invoices`                      | `.../invoices/{id}`             | `.../invoices/{id}`                                         |
 
 **Custom lists** (rows are maps of string → string; `listId` is the Admin custom object id, e.g. `obj-123`):
 
@@ -190,10 +196,19 @@ Fetch that case:
 curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club/cases/case-api-1"
 ```
 
+Upsert the **same** case via the id URL (path id applied to body):
+
+```bash
+curl -s -X PUT "$BASE/api/contacts/leyton%40finalproduction.club/cases/case-api-1" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"subject":"API test (updated)","status":"in_progress","openedAt":"2026-03-30","priority":"high"}'
+```
+
 Shapes match Zod in `src/lib/api/contactSchemas.ts`.
 
 ## OpenAPI
 
 Machine-readable spec: [public/openapi.yaml](public/openapi.yaml) (served as `/openapi.yaml`).
 
-In the app, open **CRM workspace** → **API docs** tab (`/crm?tab=api`) for the bearer token and endpoint table. The legacy path `/api-docs` redirects there.
+In the app, open **Back Office View** → **API docs** tab (`/crm?tab=api`) for the bearer token and endpoint table. The legacy path `/api-docs` redirects there.

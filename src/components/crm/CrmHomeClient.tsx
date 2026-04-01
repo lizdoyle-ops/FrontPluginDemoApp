@@ -26,6 +26,7 @@ import {
 import { ApiDocsClient } from "@/components/api-docs/ApiDocsClient";
 import { AdminCentre } from "@/components/crm/AdminCentre";
 import { CustomListsEditor } from "@/components/crm/CustomListsEditor";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
 import { getDemoApiToken } from "@/lib/demoApiToken";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
@@ -591,12 +592,15 @@ export function CrmHomeClient() {
                     }
                   />
                 </Field>
-                <Field label="Email">
+                <Field label="Email (account ID)">
                   <input
                     className={inputClass(true)}
                     readOnly
                     value={contact.email}
                   />
+                  <div className="mt-1.5">
+                    <RecordIdLine id={contact.email} />
+                  </div>
                 </Field>
                 <Field label="Company">
                   <input
@@ -773,6 +777,7 @@ export function CrmHomeClient() {
         return renderTable(
           contact.invoices as unknown as Record<string, unknown>[],
           [
+            { key: "id", label: "ID" },
             { key: "reference", label: "Ref" },
             { key: "title", label: "Title" },
             { key: "amount", label: "Amount" },
@@ -817,6 +822,7 @@ export function CrmHomeClient() {
         return renderTable(
           contact.quotes as unknown as Record<string, unknown>[],
           [
+            { key: "id", label: "ID" },
             { key: "title", label: "Title" },
             { key: "amount", label: "Amount" },
             { key: "status", label: "Status" },
@@ -858,6 +864,7 @@ export function CrmHomeClient() {
         return renderTable(
           contact.cases as unknown as Record<string, unknown>[],
           [
+            { key: "id", label: "ID" },
             { key: "subject", label: "Subject" },
             { key: "status", label: "Status" },
             { key: "openedAt", label: "Opened" },
@@ -897,6 +904,7 @@ export function CrmHomeClient() {
         return renderTable(
           contact.contracts as unknown as Record<string, unknown>[],
           [
+            { key: "id", label: "ID" },
             { key: "title", label: "Title" },
             { key: "type", label: "Type" },
             { key: "status", label: "Status" },
@@ -975,6 +983,7 @@ export function CrmHomeClient() {
         return renderTable(
           contact.attachments as unknown as Record<string, unknown>[],
           [
+            { key: "id", label: "ID" },
             { key: "name", label: "Name" },
             { key: "category", label: "Category" },
             { key: "uploadedAt", label: "Uploaded" },
@@ -1014,6 +1023,7 @@ export function CrmHomeClient() {
         return renderTable(
           contact.inquiries as unknown as Record<string, unknown>[],
           [
+            { key: "id", label: "ID" },
             { key: "subject", label: "Subject" },
             { key: "date", label: "Date" },
             { key: "channel", label: "Channel" },
@@ -1552,7 +1562,7 @@ export function CrmHomeClient() {
             </div>
             <div className="min-w-0">
               <h1 className="text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
-                CRM workspace
+                Back Office View
               </h1>
               <p className="text-[11px] text-zinc-500 sm:text-[12px]">
                 Full-screen desk · same data as the Front plugin

@@ -1,5 +1,6 @@
 import type { Quote } from "@/types/contact";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 const statusVariant: Record<Quote["status"], "warning" | "success" | "default"> = {
   pending: "warning",
@@ -19,6 +20,7 @@ export function QuotesSection({ items }: { items: Quote[] }) {
           className="flex items-start justify-between gap-2 rounded-md border border-zinc-100 px-2.5 py-2"
         >
           <div>
+            <RecordIdLine id={q.id} />
             <div className="font-medium text-zinc-900">{q.title}</div>
             <div className="text-zinc-600">
               {q.currency} {q.amount.toLocaleString()}

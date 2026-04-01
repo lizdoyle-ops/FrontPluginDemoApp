@@ -1,5 +1,6 @@
 import type { Contract } from "@/types/contact";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 const statusVariant: Record<Contract["status"], "success" | "default" | "warning"> = {
   active: "success",
@@ -20,6 +21,7 @@ export function ContractsSection({ items }: { items: Contract[] }) {
         >
           <div className="flex items-start justify-between gap-2">
             <div>
+              <RecordIdLine id={c.id} />
               <div className="font-medium text-zinc-900">{c.title}</div>
               <div className="text-[11px] text-zinc-500 capitalize">
                 {c.type} · {c.startDate}

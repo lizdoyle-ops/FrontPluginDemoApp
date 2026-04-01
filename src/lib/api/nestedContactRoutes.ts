@@ -5,6 +5,7 @@ import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import {
   appendCustomListRow,
   appendTimelineEvent,
+  deleteNestedContactItem,
   getContact,
   getCustomListRow,
   getNestedContactItem,
@@ -113,6 +114,64 @@ export async function getNestedItemById<K extends NestedIdCollectionKey>(
     );
   }
   return NextResponse.json(item);
+}
+
+/** Upsert one nested record; path `id` is merged into the JSON body (overrides body.id). */
+export async function upsertNestedItemByPathId<K extends NestedIdCollectionKey>(
+  request: Request,
+  emailRaw: string,
+  idRaw: string,
+  field: K,
+  schema: z.ZodType<ContactData[K][number]>,
+  successStatus: 200 | 201,
+) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
+  const email = decodeEmailParam(emailRaw);
+  const id = decodeIdParam(idRaw);
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  const base =
+    typeof json === "object" && json !== null && !Array.isArray(json)
+      ? (json as Record<string, unknown>)
+      : {};
+  const parsed = schema.safeParse({ ...base, id });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+  if (!getContact(email)) {
+    return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const updated = upsertNestedContactItem(
+    email,
+    field,
+    parsed.data as ContactData[K][number],
+  );
+  return NextResponse.json(updated, { status: successStatus });
+}
+
+export async function deleteNestedItemByPathId(
+  request: Request,
+  emailRaw: string,
+  idRaw: string,
+  field: NestedIdCollectionKey,
+) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
+  const email = decodeEmailParam(emailRaw);
+  const id = decodeIdParam(idRaw);
+  if (!getContact(email)) {
+    return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const updated = deleteNestedContactItem(email, field, id);
+  return NextResponse.json(updated);
 }
 
 export async function getTimelineItemByIndex(

@@ -105,6 +105,7 @@ export function CustomListsEditor({
               <table className="w-full min-w-[320px] border-collapse text-left text-[12px]">
                 <thead>
                   <tr className="border-b border-zinc-100 text-[11px] font-medium uppercase text-zinc-500">
+                    <th className="py-2 pr-2">ID</th>
                     {keys.map((k) => (
                       <th key={k} className="py-2 pr-2">
                         {k}
@@ -117,7 +118,7 @@ export function CustomListsEditor({
                   {rows.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={keys.length + 1}
+                        colSpan={keys.length + 2}
                         className="py-6 text-center text-zinc-500"
                       >
                         No rows. Add one below.
@@ -126,6 +127,9 @@ export function CustomListsEditor({
                   ) : (
                     rows.map((row, ri) => (
                       <tr key={row.id} className="border-b border-zinc-50">
+                        <td className="max-w-[140px] truncate py-1.5 pr-2 font-mono text-[11px] text-zinc-500">
+                          {row.id}
+                        </td>
                         {keys.map((k) => (
                           <td key={k} className="py-1.5 pr-2">
                             <input
