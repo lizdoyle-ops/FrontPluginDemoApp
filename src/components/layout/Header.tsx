@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Sun, X } from "lucide-react";
+import { ExternalLink, Menu, Sun, X } from "lucide-react";
 import { useState } from "react";
 
 export function Header({
@@ -72,11 +72,17 @@ export function Header({
                 </Link>
                 <Link
                   href="/crm"
-                  className="block px-3 py-2 text-[13px] hover:bg-zinc-50"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between gap-2 px-3 py-2 text-[13px] hover:bg-zinc-50"
                   onClick={() => setOpen(false)}
                   role="menuitem"
                 >
-                  CRM — full workspace
+                  <span>Back Office View</span>
+                  <ExternalLink
+                    className="h-3.5 w-3.5 shrink-0 text-zinc-400 opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-hidden
+                  />
                 </Link>
                 <Link
                   href="/crm?tab=admin"

@@ -165,7 +165,7 @@ Each top-level array on `ContactData` has the same pattern: **POST** to create/u
 | Quotes      | `/api/contacts/{email}/quotes`                      | `/api/contacts/{email}/quotes/{id}`                  |
 | Inquiries   | `/api/contacts/{email}/inquiries`                   | `/api/contacts/{email}/inquiries/{id}`               |
 | Contracts   | `/api/contacts/{email}/contracts`                   | `/api/contacts/{email}/contracts/{id}`               |
-| Timeline    | `/api/contacts/{email}/timeline`                    | `/api/contacts/{email}/timeline/{id}`                |
+| Timeline    | `/api/contacts/{email}/timeline`                    | `/api/contacts/{email}/timeline/{index}` (zero-based) |
 | Attachments | `/api/contacts/{email}/attachments`                 | `/api/contacts/{email}/attachments/{id}`             |
 | Work orders | `/api/contacts/{email}/work-orders`                 | `/api/contacts/{email}/work-orders/{id}`             |
 | Invoices    | `/api/contacts/{email}/invoices`                    | `/api/contacts/{email}/invoices/{id}`                |

@@ -294,7 +294,7 @@ paths:
           description: Not found
   /api/contacts/{email}/timeline:
     post:
-      summary: Create or upsert timeline event (id in body)
+      summary: Append a timeline event (no id; events are not individually keyed)
       requestBody:
         required: true
         content:
@@ -306,12 +306,19 @@ paths:
           description: Updated contact
         "404":
           description: Contact not found
-  /api/contacts/{email}/timeline/{id}:
+  /api/contacts/{email}/timeline/{index}:
     get:
-      summary: Get one timeline event by id
+      summary: Get one timeline event by zero-based index in the contact timeline array
+      parameters:
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
       responses:
         "200":
-          description: Timeline event
+          description: Timeline event with index
         "404":
           description: Not found
   /api/contacts/{email}/attachments:
@@ -436,9 +443,8 @@ components:
         endDate: { type: string }
     TimelineEvent:
       type: object
-      required: [id, type, title, date]
+      required: [type, title, date]
       properties:
-        id: { type: string }
         type:
           type: string
           enum: [inquiry, quote, reservation, note, contract, payment]
@@ -456,9 +462,14 @@ components:
         uploadedAt: { type: string }
     CustomListRow:
       type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Stable unique id for this row
       additionalProperties:
         type: string
-      description: Map of field key to string value (matches admin-defined columns)
+      description: Unique id plus map of admin-defined field keys to string values
     WorkOrder:
       type: object
       required: [id, title, type, status]

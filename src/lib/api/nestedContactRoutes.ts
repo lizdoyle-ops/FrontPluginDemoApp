@@ -4,12 +4,15 @@ import type { ContactData } from "@/types/contact";
 import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import {
   appendCustomListRow,
+  appendTimelineEvent,
   getContact,
   getCustomListRow,
   getNestedContactItem,
+  getTimelineEventByIndex,
   type NestedIdCollectionKey,
   upsertNestedContactItem,
 } from "@/server/demoStore";
+import type { CustomListRow, TimelineEvent } from "@/types/contact";
 
 export function decodeEmailParam(raw: string) {
   try {
@@ -60,6 +63,34 @@ export async function postNestedCollectionItem<K extends NestedIdCollectionKey>(
   return NextResponse.json(updated, { status: 201 });
 }
 
+export async function postTimelineEvent(
+  request: Request,
+  emailRaw: string,
+  schema: z.ZodType<TimelineEvent>,
+) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
+  const email = decodeEmailParam(emailRaw);
+  let json: unknown;
+  try {
+    json = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  const parsed = schema.safeParse(json);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 400 },
+    );
+  }
+  if (!getContact(email)) {
+    return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const updated = appendTimelineEvent(email, parsed.data);
+  return NextResponse.json(updated, { status: 201 });
+}
+
 export async function getNestedItemById<K extends NestedIdCollectionKey>(
   request: Request,
   emailRaw: string,
@@ -84,11 +115,36 @@ export async function getNestedItemById<K extends NestedIdCollectionKey>(
   return NextResponse.json(item);
 }
 
+export async function getTimelineItemByIndex(
+  request: Request,
+  emailRaw: string,
+  indexRaw: string,
+) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
+  const email = decodeEmailParam(emailRaw);
+  const index = Number.parseInt(indexRaw, 10);
+  if (!Number.isFinite(index) || !Number.isInteger(index) || index < 0) {
+    return NextResponse.json({ error: "Invalid timeline index" }, { status: 400 });
+  }
+  if (!getContact(email)) {
+    return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const item = getTimelineEventByIndex(email, index);
+  if (!item) {
+    return NextResponse.json(
+      { error: "Timeline event not found" },
+      { status: 404 },
+    );
+  }
+  return NextResponse.json({ index, event: item });
+}
+
 export async function postCustomListRow(
   request: Request,
   emailRaw: string,
   listIdRaw: string,
-  schema: z.ZodType<Record<string, string>>,
+  schema: z.ZodType<CustomListRow>,
 ) {
   const denied = verifyDemoApiAuth(request);
   if (denied) return denied;

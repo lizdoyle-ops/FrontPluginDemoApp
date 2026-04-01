@@ -1,9 +1,11 @@
+import type { CustomListRow } from "@/types/contact";
+
 export function DynamicCustomListSection({
   fieldKeys,
   rows,
 }: {
   fieldKeys: string[];
-  rows: Record<string, string>[];
+  rows: CustomListRow[];
 }) {
   if (!fieldKeys.length) {
     return (
@@ -28,8 +30,8 @@ export function DynamicCustomListSection({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b border-zinc-50">
+          {rows.map((row) => (
+            <tr key={row.id} className="border-b border-zinc-50">
               {fieldKeys.map((k) => (
                 <td key={k} className="py-2 pr-3 text-zinc-800">
                   {row[k] ?? "—"}

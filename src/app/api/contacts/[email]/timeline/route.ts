@@ -1,5 +1,5 @@
 import { timelineSchema } from "@/lib/api/contactSchemas";
-import { postNestedCollectionItem } from "@/lib/api/nestedContactRoutes";
+import { postTimelineEvent } from "@/lib/api/nestedContactRoutes";
 
 type RouteParams = { email: string };
 
@@ -8,5 +8,5 @@ export async function POST(
   context: { params: Promise<RouteParams> },
 ) {
   const { email } = await context.params;
-  return postNestedCollectionItem(request, email, "timeline", timelineSchema);
+  return postTimelineEvent(request, email, timelineSchema);
 }

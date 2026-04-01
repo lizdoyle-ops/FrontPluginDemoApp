@@ -3,15 +3,26 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
-import type { ContactData, CustomObjectDefinition } from "@/types/contact";
+import type {
+  ContactData,
+  CustomListRow,
+  CustomObjectDefinition,
+} from "@/types/contact";
 
 const jsonAuth = (): HeadersInit => ({
   ...demoApiAuthHeaders(),
   "Content-Type": "application/json",
 });
 
-function emptyRow(keys: string[]): Record<string, string> {
-  return Object.fromEntries(keys.map((k) => [k, ""]));
+function newRowId(): string {
+  return `clr-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function emptyRow(keys: string[]): CustomListRow {
+  const fields = Object.fromEntries(
+    keys.filter((k) => k !== "id").map((k) => [k, ""]),
+  ) as Record<string, string>;
+  return { ...fields, id: newRowId() };
 }
 
 export function CustomListsEditor({
@@ -23,7 +34,7 @@ export function CustomListsEditor({
   definitions: CustomObjectDefinition[];
   onUpdated: (c: ContactData) => void;
 }) {
-  const [lists, setLists] = useState<Record<string, Record<string, string>[]>>(
+  const [lists, setLists] = useState<Record<string, CustomListRow[]>>(
     () => contact.customLists ?? {},
   );
   const [saving, setSaving] = useState<string | null>(null);
@@ -35,7 +46,7 @@ export function CustomListsEditor({
 
   const enc = (e: string) => encodeURIComponent(e);
 
-  const saveList = async (defId: string, rows: Record<string, string>[]) => {
+  const saveList = async (defId: string, rows: CustomListRow[]) => {
     setErr(null);
     setSaving(defId);
     const nextLists = { ...lists, [defId]: rows };
@@ -114,7 +125,7 @@ export function CustomListsEditor({
                     </tr>
                   ) : (
                     rows.map((row, ri) => (
-                      <tr key={ri} className="border-b border-zinc-50">
+                      <tr key={row.id} className="border-b border-zinc-50">
                         {keys.map((k) => (
                           <td key={k} className="py-1.5 pr-2">
                             <input

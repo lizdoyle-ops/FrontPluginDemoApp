@@ -1,12 +1,49 @@
 import fs from "fs";
 import path from "path";
 import { MOCK_CONTACTS } from "@/data/mockData";
-import type { ContactData } from "@/types/contact";
+import type { ContactData, CustomListRow, TimelineEvent } from "@/types/contact";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "demo-store.json");
 
 type StoreShape = Record<string, ContactData>;
+
+function newCustomListRowId(): string {
+  return `clr-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+/** Ensures custom list rows have ids; strips legacy timeline `id` fields. */
+export function normalizeContactForStore(c: ContactData): ContactData {
+  const timeline = (c.timeline ?? []).map((ev) => {
+    const legacy = ev as TimelineEvent & { id?: string };
+    const { id: _drop, ...rest } = legacy;
+    return rest as TimelineEvent;
+  });
+
+  const customLists = c.customLists
+    ? Object.fromEntries(
+        Object.entries(c.customLists).map(([listId, rows]) => [
+          listId,
+          rows.map((row) => {
+            const id = row.id?.trim();
+            if (id) return { ...row, id } as CustomListRow;
+            return { ...row, id: newCustomListRowId() } as CustomListRow;
+          }),
+        ]),
+      )
+    : c.customLists;
+
+  return { ...c, timeline, customLists };
+}
+
+function normalizeEntireStore(contacts: StoreShape): StoreShape {
+  const out: StoreShape = {};
+  for (const c of Object.values(contacts)) {
+    const n = normalizeContactForStore(c);
+    out[n.email.trim().toLowerCase()] = n;
+  }
+  return out;
+}
 
 function normalizeStoreKeys(contacts: StoreShape): StoreShape {
   const out: StoreShape = {};
@@ -16,7 +53,9 @@ function normalizeStoreKeys(contacts: StoreShape): StoreShape {
   return out;
 }
 
-let memory: StoreShape = normalizeStoreKeys({ ...MOCK_CONTACTS });
+let memory: StoreShape = normalizeEntireStore(
+  normalizeStoreKeys({ ...MOCK_CONTACTS }),
+);
 
 function readFileStore(): StoreShape | null {
   try {
@@ -42,11 +81,10 @@ function writeFileStore(data: StoreShape) {
 
 export function initDemoStoreFromDisk() {
   const fromDisk = readFileStore();
-  if (fromDisk) {
-    memory = normalizeStoreKeys({ ...MOCK_CONTACTS, ...fromDisk });
-  } else {
-    memory = normalizeStoreKeys({ ...MOCK_CONTACTS });
-  }
+  const merged = fromDisk
+    ? normalizeStoreKeys({ ...MOCK_CONTACTS, ...fromDisk })
+    : normalizeStoreKeys({ ...MOCK_CONTACTS });
+  memory = normalizeEntireStore(merged);
 }
 
 function persist() {
@@ -81,7 +119,11 @@ export function putContact(email: string, data: ContactData) {
     delete memory[key];
   }
   const newKey = data.email.trim().toLowerCase();
-  memory[newKey] = { ...data, email: data.email.trim() };
+  const normalized = normalizeContactForStore({
+    ...data,
+    email: data.email.trim(),
+  });
+  memory[newKey] = normalized;
   persist();
 }
 
@@ -112,7 +154,6 @@ export type NestedIdCollectionKey =
   | "cases"
   | "workOrders"
   | "contracts"
-  | "timeline"
   | "attachments"
   | "invoices";
 
@@ -202,11 +243,11 @@ export function deleteInvoice(
   return deleteNestedContactItem(contactEmail, "invoices", invoiceId);
 }
 
-/** Custom list rows (Admin-defined lists); rows are string maps without stable ids. */
+/** Custom list rows (Admin-defined lists); each row has a unique `id`. */
 export function appendCustomListRow(
   contactEmail: string,
   listId: string,
-  row: Record<string, string>,
+  row: CustomListRow,
 ): ContactData | undefined {
   const c = getContact(contactEmail);
   if (!c) return undefined;
@@ -217,11 +258,33 @@ export function appendCustomListRow(
   return next;
 }
 
+export function appendTimelineEvent(
+  contactEmail: string,
+  event: TimelineEvent,
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const next = { ...c, timeline: [...c.timeline, event] };
+  putContact(c.email, next);
+  return next;
+}
+
+export function getTimelineEventByIndex(
+  contactEmail: string,
+  index: number,
+): TimelineEvent | undefined {
+  const c = getContact(contactEmail);
+  if (!c || !Number.isInteger(index) || index < 0 || index >= c.timeline.length) {
+    return undefined;
+  }
+  return c.timeline[index];
+}
+
 export function getCustomListRow(
   contactEmail: string,
   listId: string,
   index: number,
-): Record<string, string> | undefined {
+): CustomListRow | undefined {
   const c = getContact(contactEmail);
   if (!c) return undefined;
   const rows = c.customLists?.[listId];

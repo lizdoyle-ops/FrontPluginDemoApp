@@ -90,19 +90,16 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
     ],
     timeline: [
       {
-        id: "t1",
         type: "inquiry",
         title: "Initial availability request",
         date: "2026-03-10T09:00:00Z",
       },
       {
-        id: "t2",
         type: "quote",
         title: "Location package sent",
         date: "2026-03-11T14:30:00Z",
       },
       {
-        id: "t3",
         type: "reservation",
         title: "Holding deposit received",
         date: "2026-03-14T11:00:00Z",
@@ -226,14 +223,12 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
     ],
     timeline: [
       {
-        id: "t4",
         type: "contract",
         title: "Framework expired",
         date: "2025-12-31T00:00:00Z",
         detail: "Pending renewal quote",
       },
       {
-        id: "t5",
         type: "quote",
         title: "Renewal quote drafted",
         date: "2026-03-09T10:00:00Z",
@@ -333,7 +328,6 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
     ],
     timeline: [
       {
-        id: "t6",
         type: "payment",
         title: "Q1 retainer received",
         date: "2026-03-01T08:00:00Z",

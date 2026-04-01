@@ -948,7 +948,6 @@ export function CrmHomeClient() {
               recordKey: "timeline",
               index: i,
               draft: {
-                id: String(row.id ?? ""),
                 type: String(row.type ?? "note"),
                 title: String(row.title ?? ""),
                 date: String(row.date ?? ""),
@@ -965,7 +964,6 @@ export function CrmHomeClient() {
               kind: "edit",
               recordKey: "timeline",
               draft: {
-                id: `t-${Date.now()}`,
                 type: "note",
                 title: "",
                 date: new Date().toISOString(),
@@ -1145,7 +1143,6 @@ export function CrmHomeClient() {
     }
     if (recordKey === "timeline") {
       const t = {
-        id: draft.id,
         type: draft.type as ContactData["timeline"][number]["type"],
         title: draft.title,
         date: draft.date,
@@ -1474,6 +1471,54 @@ export function CrmHomeClient() {
                     ...modal,
                     draft: { ...d, category: e.target.value },
                   })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "timeline":
+        return (
+          <>
+            <Field label="Type">
+              <select
+                className={inputClass()}
+                value={d.type}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, type: e.target.value } })
+                }
+              >
+                <option value="inquiry">Inquiry</option>
+                <option value="quote">Quote</option>
+                <option value="reservation">Reservation</option>
+                <option value="note">Note</option>
+                <option value="contract">Contract</option>
+                <option value="payment">Payment</option>
+              </select>
+            </Field>
+            <Field label="Title">
+              <input
+                className={inputClass()}
+                value={d.title}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, title: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Date">
+              <input
+                className={inputClass()}
+                value={d.date}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, date: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Detail">
+              <textarea
+                className={`${inputClass()} min-h-[72px]`}
+                value={d.detail}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, detail: e.target.value } })
                 }
               />
             </Field>

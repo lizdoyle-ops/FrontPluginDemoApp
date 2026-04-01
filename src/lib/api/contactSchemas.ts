@@ -69,7 +69,6 @@ export const invoiceSchema = z.object({
 });
 
 export const timelineSchema = z.object({
-  id: z.string(),
   type: z.enum([
     "inquiry",
     "quote",
@@ -91,7 +90,17 @@ export const attachmentSchema = z.object({
   uploadedAt: z.string(),
 });
 
-export const customListRowSchema = z.record(z.string(), z.string());
+/** String map with required unique `id`; server fills `id` if omitted or empty. */
+export const customListRowSchema = z
+  .record(z.string(), z.string())
+  .transform((row) => {
+    const id = row.id?.trim();
+    if (id) return { ...row, id };
+    return {
+      ...row,
+      id: `clr-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    };
+  });
 
 const stringRow = customListRowSchema;
 

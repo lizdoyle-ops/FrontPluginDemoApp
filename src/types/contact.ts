@@ -100,8 +100,8 @@ export type TimelineEventType =
   | "contract"
   | "payment";
 
+/** Timeline entries are not keyed by id (order / date only). */
 export interface TimelineEvent {
-  id: string;
   type: TimelineEventType;
   title: string;
   date: string;
@@ -115,6 +115,9 @@ export interface Attachment {
   url?: string;
   uploadedAt: string;
 }
+
+/** Custom list row: stable unique id plus string field values (admin-defined keys). */
+export type CustomListRow = { id: string } & Record<string, string>;
 
 export interface ContactData {
   email: string;
@@ -133,7 +136,7 @@ export interface ContactData {
   attachments: Attachment[];
   invoices: Invoice[];
   /** Rows for user-defined object types (Admin centre); keyed by CustomObjectDefinition.id */
-  customLists?: Record<string, Record<string, string>[]>;
+  customLists?: Record<string, CustomListRow[]>;
 }
 
 /** Configurable list object shown on the plugin dashboard (admin-defined fields). */

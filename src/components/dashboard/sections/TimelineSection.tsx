@@ -9,8 +9,11 @@ export function TimelineSection({ items }: { items: TimelineEvent[] }) {
   );
   return (
     <ul className="space-y-2 border-l-2 border-zinc-200 pl-3">
-      {sorted.map((e) => (
-        <li key={e.id} className="relative">
+      {sorted.map((e, i) => (
+        <li
+          key={`${e.date}-${e.type}-${e.title}-${i}`}
+          className="relative"
+        >
           <span
             className="absolute -left-[17px] top-1.5 h-2 w-2 rounded-full bg-[var(--secondary-color)]"
             aria-hidden
