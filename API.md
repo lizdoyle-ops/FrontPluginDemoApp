@@ -76,7 +76,7 @@ Body must be a full valid `ContactData` (all nested arrays may be empty). Return
 curl -s -X POST "$BASE/api/contacts" \
   -H "$H" \
   -H "Content-Type: application/json" \
-  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"invoices":[]}'
+  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"invoices":[]}'
 ```
 
 ## Replace contact (PUT)
@@ -148,6 +148,38 @@ Delete:
 curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/work-orders/wo-new"
 ```
 
+## Opportunities
+
+Create or upsert (`id`, `title`, and `stage` required; `stage` is one of `prospecting`, `qualified`, `proposal`, `negotiation`, `won`, `lost`):
+
+```bash
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/opportunities" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"opp-new","title":"Lease renewal","stage":"proposal","amount":12000,"currency":"GBP","expectedCloseDate":"2026-06-30"}'
+```
+
+Get one:
+
+```bash
+curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club/opportunities/opp-new"
+```
+
+Upsert with id in path:
+
+```bash
+curl -s -X PUT "$BASE/api/contacts/leyton%40finalproduction.club/opportunities/opp-new" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Lease renewal","stage":"negotiation","amount":12500,"currency":"GBP"}'
+```
+
+Delete:
+
+```bash
+curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/opportunities/opp-new"
+```
+
 ## Invoices
 
 - **POST** `/api/contacts/{email}/invoices` — create or upsert (include `id` in JSON).
@@ -169,6 +201,7 @@ All require `Authorization: Bearer …`. Timeline uses **index** instead of id; 
 | Cases       | `.../cases`                           | `.../cases/{id}`                | `.../cases/{id}`                                            |
 | Properties  | `.../properties`                     | `.../properties/{id}`           | `.../properties/{id}`                                       |
 | Quotes      | `.../quotes`                         | `.../quotes/{id}`               | `.../quotes/{id}`                                           |
+| Opportunities | `.../opportunities`               | `.../opportunities/{id}`        | `.../opportunities/{id}`                                    |
 | Inquiries   | `.../inquiries`                     | `.../inquiries/{id}`            | `.../inquiries/{id}`                                        |
 | Contracts   | `.../contracts`                     | `.../contracts/{id}`           | `.../contracts/{id}`                                        |
 | Timeline    | `.../timeline` (append, no id)       | `.../timeline/{index}`          | —                                                           |

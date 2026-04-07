@@ -27,6 +27,7 @@ import type { CustomObjectDefinition, SectionId } from "@/types/contact";
 const SECTION_LABELS: Record<SectionId, string> = {
   properties: "Properties",
   quotes: "Quotes",
+  opportunities: "Opportunities",
   cases: "Support cases",
   workOrders: "Work orders",
   contracts: "Contracts",

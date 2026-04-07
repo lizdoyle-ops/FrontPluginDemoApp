@@ -14,6 +14,7 @@ export function emptyContact(email: string, name: string): ContactData {
     quotes: [],
     inquiries: [],
     cases: [],
+    opportunities: [],
     workOrders: [],
     contracts: [],
     timeline: [],

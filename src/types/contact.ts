@@ -38,6 +38,24 @@ export interface Case {
   priority?: "low" | "medium" | "high";
 }
 
+export type OpportunityStage =
+  | "prospecting"
+  | "qualified"
+  | "proposal"
+  | "negotiation"
+  | "won"
+  | "lost";
+
+export interface Opportunity {
+  id: string;
+  title: string;
+  stage: OpportunityStage;
+  amount?: number;
+  currency?: string;
+  expectedCloseDate?: string;
+  notes?: string;
+}
+
 export type WorkOrderType =
   | "maintenance"
   | "repair"
@@ -130,6 +148,7 @@ export interface ContactData {
   quotes: Quote[];
   inquiries: Inquiry[];
   cases: Case[];
+  opportunities: Opportunity[];
   workOrders: WorkOrder[];
   contracts: Contract[];
   timeline: TimelineEvent[];
@@ -150,6 +169,7 @@ export interface CustomObjectDefinition {
 export const SECTION_IDS = [
   "properties",
   "quotes",
+  "opportunities",
   "cases",
   "workOrders",
   "contracts",

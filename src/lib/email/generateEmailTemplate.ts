@@ -61,6 +61,19 @@ export function generateEmailTemplate(
         .join("")
     : `<tr><td colspan="4" style="padding:12px 6px;color:#71717a;font-size:13px;">No quotes.</td></tr>`;
 
+  const oppRows =
+    contact.opportunities?.length ?
+      contact.opportunities
+        .map((o) => {
+          const amt =
+            o.amount != null ?
+              money(o.currency ?? "GBP", o.amount)
+            : "—";
+          return `<tr>${td(escapeHtml(o.title))}${td(escapeHtml(o.stage))}${td(amt, "white-space:nowrap;")}${td(escapeHtml(o.expectedCloseDate ?? "—"))}</tr>`;
+        })
+        .join("")
+    : `<tr><td colspan="4" style="padding:12px 6px;color:#71717a;font-size:13px;">No opportunities.</td></tr>`;
+
   const casesRows =
     contact.cases?.length ?
       contact.cases
@@ -125,6 +138,9 @@ export function generateEmailTemplate(
 
   <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Quotes</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Title", secondaryColor)}${th("Amount", secondaryColor)}${th("Status", secondaryColor)}${th("Valid until", secondaryColor)}</tr>${quotesRows}</table>
+
+  <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Opportunities</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Title", secondaryColor)}${th("Stage", secondaryColor)}${th("Amount", secondaryColor)}${th("Close", secondaryColor)}</tr>${oppRows}</table>
 
   <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Support cases</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Subject", secondaryColor)}${th("Status", secondaryColor)}${th("Opened", secondaryColor)}${th("Priority", secondaryColor)}</tr>${casesRows}</table>

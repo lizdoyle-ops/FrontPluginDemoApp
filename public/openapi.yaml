@@ -220,6 +220,70 @@ paths:
           description: Updated contact
         "404":
           description: Contact not found
+  /api/contacts/{email}/opportunities:
+    post:
+      summary: Create or upsert opportunity (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Opportunity"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/opportunities/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one opportunity by id
+      responses:
+        "200":
+          description: Opportunity JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert opportunity; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Opportunity"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert opportunity (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Opportunity"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove opportunity
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
   /api/contacts/{email}/cases:
     post:
       summary: Create or upsert support case (id in body)
@@ -683,6 +747,25 @@ paths:
           description: Not found
 components:
   schemas:
+    Opportunity:
+      type: object
+      required: [id, title, stage]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        stage:
+          type: string
+          enum:
+            - prospecting
+            - qualified
+            - proposal
+            - negotiation
+            - won
+            - lost
+        amount: { type: number }
+        currency: { type: string }
+        expectedCloseDate: { type: string }
+        notes: { type: string }
     Case:
       type: object
       required: [id, subject, status, openedAt]
@@ -809,6 +892,7 @@ components:
         - tags
         - properties
         - quotes
+        - opportunities
         - inquiries
         - cases
         - workOrders
@@ -831,6 +915,9 @@ components:
         quotes:
           type: array
           items: { $ref: "#/components/schemas/Quote" }
+        opportunities:
+          type: array
+          items: { $ref: "#/components/schemas/Opportunity" }
         inquiries:
           type: array
           items: { $ref: "#/components/schemas/Inquiry" }

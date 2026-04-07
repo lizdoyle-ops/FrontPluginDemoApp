@@ -34,6 +34,23 @@ export const caseSchema = z.object({
   priority: z.enum(["low", "medium", "high"]).optional(),
 });
 
+export const opportunitySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  stage: z.enum([
+    "prospecting",
+    "qualified",
+    "proposal",
+    "negotiation",
+    "won",
+    "lost",
+  ]),
+  amount: z.number().optional(),
+  currency: z.string().optional(),
+  expectedCloseDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 export const workOrderSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -115,6 +132,7 @@ export const contactDataSchema = z.object({
   quotes: z.array(quoteSchema),
   inquiries: z.array(inquirySchema),
   cases: z.array(caseSchema),
+  opportunities: z.array(opportunitySchema),
   workOrders: z.array(workOrderSchema),
   contracts: z.array(contractSchema),
   timeline: z.array(timelineSchema),

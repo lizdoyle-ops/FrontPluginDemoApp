@@ -98,11 +98,16 @@ function useDemoConfigState() {
         STORAGE_KEYS.sectionOrder,
         null,
       );
-      setSectionOrder(
-        order?.length
-          ? order.filter((id) => SECTION_IDS.includes(id))
-          : DEFAULT_SECTION_ORDER,
-      );
+      const filtered =
+        order?.length ?
+          order.filter((id) => SECTION_IDS.includes(id))
+        : [];
+      const mergedSectionOrder =
+        filtered.length ? [...filtered] : [...DEFAULT_SECTION_ORDER];
+      for (const id of SECTION_IDS) {
+        if (!mergedSectionOrder.includes(id)) mergedSectionOrder.push(id);
+      }
+      setSectionOrder(mergedSectionOrder);
       const vis = readJson<Partial<Record<SectionId, boolean>> | null>(
         STORAGE_KEYS.visibleSections,
         null,

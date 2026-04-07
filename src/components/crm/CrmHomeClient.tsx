@@ -44,6 +44,7 @@ type TabId =
   | "workOrders"
   | "invoices"
   | "quotes"
+  | "opportunities"
   | "cases"
   | "contracts"
   | "timeline"
@@ -57,6 +58,7 @@ const BASE_TABS: { id: TabId; label: string }[] = [
   { id: "workOrders", label: "Work orders" },
   { id: "invoices", label: "Invoices" },
   { id: "quotes", label: "Quotes" },
+  { id: "opportunities", label: "Opportunities" },
   { id: "cases", label: "Cases" },
   { id: "contracts", label: "Contracts" },
   { id: "timeline", label: "Timeline" },
@@ -860,6 +862,51 @@ export function CrmHomeClient() {
               },
             }),
         );
+      case "opportunities":
+        return renderTable(
+          contact.opportunities as unknown as Record<string, unknown>[],
+          [
+            { key: "id", label: "ID" },
+            { key: "title", label: "Title" },
+            { key: "stage", label: "Stage" },
+            { key: "amount", label: "Amount" },
+            { key: "expectedCloseDate", label: "Close" },
+          ],
+          (row, i) =>
+            setModal({
+              kind: "edit",
+              recordKey: "opportunity",
+              index: i,
+              draft: {
+                id: String(row.id ?? ""),
+                title: String(row.title ?? ""),
+                stage: String(row.stage ?? "prospecting"),
+                amount: String(row.amount ?? ""),
+                currency: String(row.currency ?? "GBP"),
+                expectedCloseDate: String(row.expectedCloseDate ?? ""),
+                notes: String(row.notes ?? ""),
+              },
+            }),
+          (row, i) => {
+            const next = contact.opportunities.filter((_, j) => j !== i);
+            void patchArrays("opportunities", next);
+          },
+          "Add opportunity",
+          () =>
+            setModal({
+              kind: "edit",
+              recordKey: "opportunity",
+              draft: {
+                id: `opp-${Date.now()}`,
+                title: "",
+                stage: "prospecting",
+                amount: "",
+                currency: "GBP",
+                expectedCloseDate: "",
+                notes: "",
+              },
+            }),
+        );
       case "cases":
         return renderTable(
           contact.cases as unknown as Record<string, unknown>[],
@@ -1132,6 +1179,24 @@ export function CrmHomeClient() {
       if (index !== undefined) list[index] = c;
       else list.push(c);
       void patchArrays("cases", list);
+      setModal(null);
+      return;
+    }
+    if (recordKey === "opportunity") {
+      const amt = draft.amount.trim();
+      const o = {
+        id: draft.id,
+        title: draft.title,
+        stage: draft.stage as ContactData["opportunities"][number]["stage"],
+        amount: amt ? Number(amt) : undefined,
+        currency: draft.currency.trim() || undefined,
+        expectedCloseDate: draft.expectedCloseDate.trim() || undefined,
+        notes: draft.notes.trim() || undefined,
+      };
+      const list = [...contact.opportunities];
+      if (index !== undefined) list[index] = o;
+      else list.push(o);
+      void patchArrays("opportunities", list);
       setModal(null);
       return;
     }
@@ -1481,6 +1546,94 @@ export function CrmHomeClient() {
                     ...modal,
                     draft: { ...d, category: e.target.value },
                   })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "opportunity":
+        return (
+          <>
+            <Field label="ID">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Title">
+              <input
+                className={inputClass()}
+                value={d.title}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, title: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Stage">
+              <select
+                className={inputClass()}
+                value={d.stage}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, stage: e.target.value } })
+                }
+              >
+                <option value="prospecting">Prospecting</option>
+                <option value="qualified">Qualified</option>
+                <option value="proposal">Proposal</option>
+                <option value="negotiation">Negotiation</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Amount">
+                <input
+                  type="number"
+                  className={inputClass()}
+                  value={d.amount}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, amount: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Currency">
+                <input
+                  className={inputClass()}
+                  value={d.currency}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, currency: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Expected close">
+              <input
+                className={inputClass()}
+                value={d.expectedCloseDate}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, expectedCloseDate: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Notes">
+              <textarea
+                className={`${inputClass()} min-h-[72px]`}
+                value={d.notes}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, notes: e.target.value } })
                 }
               />
             </Field>

@@ -199,6 +199,36 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
       note: "Delete quote by id.",
     },
     {
+      object: "Opportunities",
+      methods: "POST",
+      path: "/api/contacts/{email}/opportunities",
+      note: "Upsert opportunity (id, title, stage in body; optional amount, currency, expectedCloseDate, notes).",
+    },
+    {
+      object: "Opportunity",
+      methods: "GET",
+      path: "/api/contacts/{email}/opportunities/{id}",
+      note: "Read one opportunity JSON.",
+    },
+    {
+      object: "Opportunity",
+      methods: "POST",
+      path: "/api/contacts/{email}/opportunities/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Opportunity",
+      methods: "PUT",
+      path: "/api/contacts/{email}/opportunities/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Opportunity",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/opportunities/{id}",
+      note: "Delete opportunity by id.",
+    },
+    {
       object: "Inquiries",
       methods: "POST",
       path: "/api/contacts/{email}/inquiries",
@@ -388,8 +418,8 @@ export function ApiDocsClient({
           Endpoints by object (GET/POST per record)
         </h2>
         <p className="mb-2 text-[11px] leading-relaxed text-zinc-500">
-          For cases, properties, quotes, inquiries, contracts, attachments, work orders, and
-          invoices: use <strong>GET …/&#123;id&#125;</strong> to read one item and{" "}
+          For cases, properties, quotes, opportunities, inquiries, contracts, attachments, work
+          orders, and invoices: use <strong>GET …/&#123;id&#125;</strong> to read one item and{" "}
           <strong>POST</strong> or <strong>PUT</strong> <strong>…/&#123;id&#125;</strong> to upsert
           (path id is merged into the JSON body). <strong>Cases</strong> use the same pattern.
         </p>

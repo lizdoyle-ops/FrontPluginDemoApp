@@ -9,6 +9,7 @@ import {
   Home,
   Layers,
   Paperclip,
+  TrendingUp,
   Wrench,
 } from "lucide-react";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
@@ -20,6 +21,7 @@ import { CasesSection } from "@/components/dashboard/sections/CasesSection";
 import { ContractsSection } from "@/components/dashboard/sections/ContractsSection";
 import { DynamicCustomListSection } from "@/components/dashboard/sections/DynamicCustomListSection";
 import { InvoicesSection } from "@/components/dashboard/sections/InvoicesSection";
+import { OpportunitiesSection } from "@/components/dashboard/sections/OpportunitiesSection";
 import { PropertiesSection } from "@/components/dashboard/sections/PropertiesSection";
 import { QuotesSection } from "@/components/dashboard/sections/QuotesSection";
 import { TimelineSection } from "@/components/dashboard/sections/TimelineSection";
@@ -38,6 +40,7 @@ import { createHtmlDraftReply } from "@/lib/front/createHtmlDraftReply";
 const SECTION_LABELS: Record<SectionId, string> = {
   properties: "Properties",
   quotes: "Quotes",
+  opportunities: "Opportunities",
   cases: "Support cases",
   workOrders: "Work orders",
   contracts: "Contracts",
@@ -49,6 +52,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
 const SECTION_ICONS: Record<SectionId, LucideIcon> = {
   properties: Home,
   quotes: FileText,
+  opportunities: TrendingUp,
   cases: Headphones,
   workOrders: Wrench,
   contracts: FileSignature,
@@ -152,6 +156,10 @@ export function ContactDashboard({
     quotes: {
       count: contact.quotes.length,
       node: <QuotesSection items={contact.quotes} />,
+    },
+    opportunities: {
+      count: contact.opportunities.length,
+      node: <OpportunitiesSection items={contact.opportunities} />,
     },
     cases: {
       count: contact.cases.length,

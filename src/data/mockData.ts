@@ -61,6 +61,17 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         priority: "low",
       },
     ],
+    opportunities: [
+      {
+        id: "opp1",
+        title: "Q2 location bundle upsell",
+        stage: "negotiation",
+        amount: 24000,
+        currency: "GBP",
+        expectedCloseDate: "2026-04-30",
+        notes: "Follow up after site visit",
+      },
+    ],
     workOrders: [
       {
         id: "wo1",
@@ -202,6 +213,16 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         openedAt: "2026-02-10",
       },
     ],
+    opportunities: [
+      {
+        id: "opp2",
+        title: "2026 bulk booking renewal",
+        stage: "proposal",
+        amount: 96000,
+        currency: "GBP",
+        expectedCloseDate: "2026-04-30",
+      },
+    ],
     workOrders: [
       {
         id: "wo3",
@@ -298,6 +319,17 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         status: "open",
         openedAt: "2026-03-25",
         priority: "medium",
+      },
+    ],
+    opportunities: [
+      {
+        id: "opp3",
+        title: "Second site — Bristol expansion",
+        stage: "qualified",
+        amount: 18600,
+        currency: "GBP",
+        expectedCloseDate: "2026-05-15",
+        notes: "Partner approved budget range",
       },
     ],
     workOrders: [
