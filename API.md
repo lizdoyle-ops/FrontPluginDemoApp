@@ -76,7 +76,7 @@ Body must be a full valid `ContactData` (all nested arrays may be empty). Return
 curl -s -X POST "$BASE/api/contacts" \
   -H "$H" \
   -H "Content-Type: application/json" \
-  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"invoices":[]}'
+  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"pets":[],"policies":[],"policyholder":{"name":"","dob":"","email":"","phone":"","address":"","authorisedContacts":[]},"cover":{"vetFeeLimit":0,"vetFeeLimitType":"","remainingLimitThisYear":0,"excess":{"fixed":0,"coInsurance":""},"complementaryTreatment":0,"dental":0,"thirdPartyLiability":0,"exclusions":[]},"claimsHistory":[],"invoices":[]}'
 ```
 
 ## Replace contact (PUT)
@@ -212,6 +212,57 @@ Delete:
 curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/orders/ord-new"
 ```
 
+## Pets
+
+Create or upsert (`id`, `name`, and `species` required; optional `breed`, `dob`, `age`, `gender` (`male` | `female` | `unknown`), `neutered`, `microchip`, `preExistingConditions[]` with `condition`, `notedDate`, `status`, `excludedFromCover`, plus legacy `authorisedContacts`, `notes`):
+
+```bash
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/pets" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"pet-new","name":"Miso","species":"cat","breed":"British Shorthair","preExistingConditions":[]}'
+```
+
+Get one / upsert by path id / delete: `GET|POST|PUT|DELETE`  
+`/api/contacts/{email}/pets/{id}` (same nested pattern as orders).
+
+## Policies
+
+Create or upsert (`id`, `policyNumber`, `product`, `status`, `startDate`, `renewalDate`, `annualPremium`, `paymentFrequency`, `monthlyDirectDebit`, `paymentStatus`):
+
+```bash
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/policies" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"pol-new","policyNumber":"MP-100","product":"Complete","status":"Active","startDate":"2026-01-01","renewalDate":"2027-01-01","annualPremium":748,"paymentFrequency":"Monthly","monthlyDirectDebit":62.33,"paymentStatus":"Up to date"}'
+```
+
+Get one / upsert by path id / delete: `GET|POST|PUT|DELETE`  
+`/api/contacts/{email}/policies/{id}`.
+
+## Policyholder
+
+One object per contact (not a list). **GET** and **PUT** only:
+
+```bash
+curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club/policyholder"
+```
+
+```bash
+curl -s -X PUT "$BASE/api/contacts/leyton%40finalproduction.club/policyholder" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Tom Fielding","dob":"1981-07-22","email":"tom.fielding@gmail.com","phone":"07603 774 219","address":"14 Birchwood Close, Bristol, BS6 7TN","authorisedContacts":["Tom Fielding"]}'
+```
+
+## Cover
+
+Singleton per contact. **GET** / **PUT** with `vetFeeLimit`, `vetFeeLimitType`, `remainingLimitThisYear`, `excess` (`fixed`, `coInsurance`), monetary buckets, `exclusions[]`.
+
+## Claims (`claimsHistory`)
+
+Stored on the contact as `claimsHistory`. Use **POST** `/api/contacts/{email}/claims` to upsert (body includes stable `id` and display `claimId`). Per-claim CRUD: `GET|POST|PUT|DELETE` `/api/contacts/{email}/claims/{id}`.
+
 ## Invoices
 
 - **POST** `/api/contacts/{email}/invoices` — create or upsert (include `id` in JSON).
@@ -226,7 +277,7 @@ Each nested type supports:
 2. **GET** `.../{id}` — return **only that record** as JSON.
 3. **POST** / **PUT** `.../{id}` — upsert that id (path id overrides `body.id`); response is the **full updated `ContactData`**. **DELETE** `.../{id}` removes the record.
 
-All require `Authorization: Bearer …`. Timeline uses **index** instead of id; custom lists use **row index**.
+All require `Authorization: Bearer …`. Timeline uses **index** instead of id; custom lists use **row index**. **Policyholder** and **cover** are not id collections: use **GET** / **PUT** on `.../policyholder` and `.../cover`.
 
 | Collection   | POST (body id)                         | GET one                         | POST/PUT/DELETE one id                                      |
 |-------------|---------------------------------------|---------------------------------|-------------------------------------------------------------|
@@ -240,6 +291,9 @@ All require `Authorization: Bearer …`. Timeline uses **index** instead of id; 
 | Timeline    | `.../timeline` (append, no id)       | `.../timeline/{index}`          | —                                                           |
 | Attachments | `.../attachments`                   | `.../attachments/{id}`          | `.../attachments/{id}`                                      |
 | Work orders | `.../work-orders`                   | `.../work-orders/{id}`          | `.../work-orders/{id}`                                      |
+| Pets        | `.../pets`                          | `.../pets/{id}`                 | `.../pets/{id}`                                             |
+| Policies    | `.../policies`                      | `.../policies/{id}`             | `.../policies/{id}`                                         |
+| Claims      | `.../claims` → `claimsHistory`        | `.../claims/{id}`               | `.../claims/{id}`                                           |
 | Invoices    | `.../invoices`                      | `.../invoices/{id}`             | `.../invoices/{id}`                                         |
 
 **Custom lists** (rows are maps of string → string; `listId` is the Admin custom object id, e.g. `obj-123`):

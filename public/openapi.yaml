@@ -6,9 +6,9 @@ info:
     Demo REST API for the Property Management Front plugin.
     Send header `Authorization: Bearer <token>` (see Back Office View → API docs tab at `/crm?tab=api`; env `NEXT_PUBLIC_DEMO_API_TOKEN`).
 
-    **Single records (per contact email):** For each nested object type (properties, quotes, cases, inquiries, contracts, attachments, work orders, invoices),
+    **Single records (per contact email):** For each nested object type (properties, quotes, cases, inquiries, contracts, attachments, work orders, invoices, pets, policies, claims),
     use **GET** `.../{id}` to read one record and **POST** `.../{id}` (or **PUT**) with a JSON body to create or replace that id.
-    Collection **POST** `.../cases` (etc.) also upserts by `id` in the body. Timeline events use **index** instead of id (see `/timeline/{index}`).
+    Collection **POST** `.../cases` (etc.) also upserts by `id` in the body. **Policyholder** and **cover** are singletons: **GET**/**PUT** on `.../policyholder` and `.../cover` only. Timeline events use **index** instead of id (see `/timeline/{index}`).
 servers:
   - url: https://front-plugin-demo-app.vercel.app
     description: Production (Vercel)
@@ -773,6 +773,246 @@ paths:
       responses:
         "200": { description: Updated contact }
         "404": { description: Contact not found }
+  /api/contacts/{email}/pets:
+    post:
+      summary: Create or upsert pet (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/pets/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one pet by id
+      responses:
+        "200":
+          description: Pet JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert pet; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert pet (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove pet
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/policies:
+    post:
+      summary: Create or upsert policy (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRecord"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/policies/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one policy by id
+      responses:
+        "200":
+          description: Policy JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyRecord"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert policy; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRecord"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert policy (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRecord"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove policy
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/policyholder:
+    get:
+      summary: Get policyholder (single object per contact)
+      responses:
+        "200":
+          description: Policyholder JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policyholder"
+        "404":
+          description: Contact not found
+    put:
+      summary: Replace policyholder; returns full contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Policyholder"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/cover:
+    get:
+      summary: Get cover (limits, excess, exclusions)
+      responses:
+        "200":
+          description: Cover JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cover"
+        "404":
+          description: Contact not found
+    put:
+      summary: Replace cover; returns full contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cover"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/claims:
+    post:
+      summary: Create or upsert claim (id in body; use claimId for display)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimHistoryItem"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/claims/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one claim by id
+      responses:
+        "200":
+          description: Claim JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimHistoryItem"
+        "404":
+          description: Not found
+    post:
+      summary: Upsert claim; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimHistoryItem"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert claim (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimHistoryItem"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove claim
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
   /api/contacts/{email}/custom-lists/{listId}/rows:
     post:
       summary: Append a row to a custom list (Admin object id as listId)
@@ -928,6 +1168,122 @@ components:
         category: { type: string }
         url: { type: string }
         uploadedAt: { type: string }
+    PetPreExistingCondition:
+      type: object
+      required: [condition, notedDate, status, excludedFromCover]
+      properties:
+        condition: { type: string }
+        notedDate: { type: string }
+        status: { type: string }
+        excludedFromCover: { type: boolean }
+    Pet:
+      type: object
+      required: [id, name, species]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        species: { type: string }
+        breed: { type: string }
+        dob: { type: string }
+        age: { type: number }
+        gender:
+          type: string
+          enum: [male, female, unknown]
+        neutered: { type: boolean }
+        microchip: { type: string }
+        preExistingConditions:
+          type: array
+          items: { $ref: "#/components/schemas/PetPreExistingCondition" }
+        authorisedContacts: { type: string }
+        notes: { type: string }
+    PolicyRecord:
+      type: object
+      required:
+        - id
+        - policyNumber
+        - product
+        - status
+        - startDate
+        - renewalDate
+        - annualPremium
+        - paymentFrequency
+        - monthlyDirectDebit
+        - paymentStatus
+      properties:
+        id: { type: string }
+        policyNumber: { type: string }
+        product: { type: string }
+        status: { type: string }
+        startDate: { type: string }
+        renewalDate: { type: string }
+        annualPremium: { type: number }
+        paymentFrequency: { type: string }
+        monthlyDirectDebit: { type: number }
+        paymentStatus: { type: string }
+    Policyholder:
+      type: object
+      required: [name, dob, email, phone, address, authorisedContacts]
+      properties:
+        name: { type: string }
+        dob: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        address: { type: string }
+        authorisedContacts:
+          type: array
+          items: { type: string }
+    CoverExcess:
+      type: object
+      required: [fixed, coInsurance]
+      properties:
+        fixed: { type: number }
+        coInsurance: { type: string }
+    Cover:
+      type: object
+      required:
+        - vetFeeLimit
+        - vetFeeLimitType
+        - remainingLimitThisYear
+        - excess
+        - complementaryTreatment
+        - dental
+        - thirdPartyLiability
+        - exclusions
+      properties:
+        vetFeeLimit: { type: number }
+        vetFeeLimitType: { type: string }
+        remainingLimitThisYear: { type: number }
+        excess: { $ref: "#/components/schemas/CoverExcess" }
+        complementaryTreatment: { type: number }
+        dental: { type: number }
+        thirdPartyLiability: { type: number }
+        exclusions:
+          type: array
+          items: { type: string }
+    ClaimHistoryItem:
+      type: object
+      required:
+        - id
+        - claimId
+        - dateSubmitted
+        - condition
+        - vet
+        - amountClaimed
+        - amountPaid
+        - excessApplied
+        - coInsuranceApplied
+        - status
+      properties:
+        id: { type: string }
+        claimId: { type: string }
+        dateSubmitted: { type: string }
+        condition: { type: string }
+        vet: { type: string }
+        amountClaimed: { type: number }
+        amountPaid: { type: number }
+        excessApplied: { type: number }
+        coInsuranceApplied: { type: number }
+        status: { type: string }
     CustomListRow:
       type: object
       required: [id]
@@ -983,6 +1339,11 @@ components:
         - contracts
         - timeline
         - attachments
+        - pets
+        - policies
+        - policyholder
+        - cover
+        - claimsHistory
         - invoices
       properties:
         email: { type: string, format: email }
@@ -1023,6 +1384,19 @@ components:
         attachments:
           type: array
           items: { $ref: "#/components/schemas/Attachment" }
+        pets:
+          type: array
+          items: { $ref: "#/components/schemas/Pet" }
+        policies:
+          type: array
+          items: { $ref: "#/components/schemas/PolicyRecord" }
+        policyholder:
+          $ref: "#/components/schemas/Policyholder"
+        cover:
+          $ref: "#/components/schemas/Cover"
+        claimsHistory:
+          type: array
+          items: { $ref: "#/components/schemas/ClaimHistoryItem" }
         invoices:
           type: array
           items: { $ref: "#/components/schemas/Invoice" }
