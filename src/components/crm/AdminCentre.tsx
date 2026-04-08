@@ -28,6 +28,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
   properties: "Properties",
   quotes: "Quotes",
   opportunities: "Opportunities",
+  orders: "Orders",
   cases: "Support cases",
   workOrders: "Work orders",
   contracts: "Contracts",

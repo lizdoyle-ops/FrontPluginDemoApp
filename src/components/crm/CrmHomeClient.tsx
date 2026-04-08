@@ -45,6 +45,7 @@ type TabId =
   | "invoices"
   | "quotes"
   | "opportunities"
+  | "orders"
   | "cases"
   | "contracts"
   | "timeline"
@@ -59,6 +60,7 @@ const BASE_TABS: { id: TabId; label: string }[] = [
   { id: "invoices", label: "Invoices" },
   { id: "quotes", label: "Quotes" },
   { id: "opportunities", label: "Opportunities" },
+  { id: "orders", label: "Orders" },
   { id: "cases", label: "Cases" },
   { id: "contracts", label: "Contracts" },
   { id: "timeline", label: "Timeline" },
@@ -907,6 +909,53 @@ export function CrmHomeClient() {
               },
             }),
         );
+      case "orders":
+        return renderTable(
+          contact.orders as unknown as Record<string, unknown>[],
+          [
+            { key: "id", label: "ID" },
+            { key: "title", label: "Title" },
+            { key: "status", label: "Status" },
+            { key: "total", label: "Total" },
+            { key: "orderedAt", label: "Ordered" },
+          ],
+          (row, i) =>
+            setModal({
+              kind: "edit",
+              recordKey: "order",
+              index: i,
+              draft: {
+                id: String(row.id ?? ""),
+                title: String(row.title ?? ""),
+                status: String(row.status ?? "pending"),
+                orderedAt: String(row.orderedAt ?? ""),
+                total: String(row.total ?? "0"),
+                currency: String(row.currency ?? "GBP"),
+                fulfilledAt: String(row.fulfilledAt ?? ""),
+                notes: String(row.notes ?? ""),
+              },
+            }),
+          (row, i) => {
+            const next = contact.orders.filter((_, j) => j !== i);
+            void patchArrays("orders", next);
+          },
+          "Add order",
+          () =>
+            setModal({
+              kind: "edit",
+              recordKey: "order",
+              draft: {
+                id: `ord-${Date.now()}`,
+                title: "",
+                status: "pending",
+                orderedAt: new Date().toISOString().slice(0, 10),
+                total: "0",
+                currency: "GBP",
+                fulfilledAt: "",
+                notes: "",
+              },
+            }),
+        );
       case "cases":
         return renderTable(
           contact.cases as unknown as Record<string, unknown>[],
@@ -1197,6 +1246,24 @@ export function CrmHomeClient() {
       if (index !== undefined) list[index] = o;
       else list.push(o);
       void patchArrays("opportunities", list);
+      setModal(null);
+      return;
+    }
+    if (recordKey === "order") {
+      const ord = {
+        id: draft.id,
+        title: draft.title,
+        status: draft.status as ContactData["orders"][number]["status"],
+        orderedAt: draft.orderedAt,
+        total: Number(draft.total) || 0,
+        currency: draft.currency.trim() || "GBP",
+        fulfilledAt: draft.fulfilledAt.trim() || undefined,
+        notes: draft.notes.trim() || undefined,
+      };
+      const list = [...contact.orders];
+      if (index !== undefined) list[index] = ord;
+      else list.push(ord);
+      void patchArrays("orders", list);
       setModal(null);
       return;
     }
@@ -1624,6 +1691,105 @@ export function CrmHomeClient() {
                   setModal({
                     ...modal,
                     draft: { ...d, expectedCloseDate: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Notes">
+              <textarea
+                className={`${inputClass()} min-h-[72px]`}
+                value={d.notes}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, notes: e.target.value } })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "order":
+        return (
+          <>
+            <Field label="ID">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Title">
+              <input
+                className={inputClass()}
+                value={d.title}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, title: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Status">
+              <select
+                className={inputClass()}
+                value={d.status}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, status: e.target.value } })
+                }
+              >
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+                <option value="fulfilled">Fulfilled</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </Field>
+            <Field label="Ordered at">
+              <input
+                className={inputClass()}
+                value={d.orderedAt}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, orderedAt: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Total">
+                <input
+                  type="number"
+                  className={inputClass()}
+                  value={d.total}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, total: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Currency">
+                <input
+                  className={inputClass()}
+                  value={d.currency}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, currency: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Fulfilled at">
+              <input
+                className={inputClass()}
+                value={d.fulfilledAt}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, fulfilledAt: e.target.value },
                   })
                 }
               />

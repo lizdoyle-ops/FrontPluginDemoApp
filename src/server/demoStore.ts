@@ -34,7 +34,8 @@ export function normalizeContactForStore(c: ContactData): ContactData {
     : c.customLists;
 
   const opportunities = c.opportunities ?? [];
-  return { ...c, timeline, customLists, opportunities };
+  const orders = c.orders ?? [];
+  return { ...c, timeline, customLists, opportunities, orders };
 }
 
 function normalizeEntireStore(contacts: StoreShape): StoreShape {
@@ -154,6 +155,7 @@ export type NestedIdCollectionKey =
   | "inquiries"
   | "cases"
   | "opportunities"
+  | "orders"
   | "workOrders"
   | "contracts"
   | "attachments"

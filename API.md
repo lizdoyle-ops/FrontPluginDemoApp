@@ -76,7 +76,7 @@ Body must be a full valid `ContactData` (all nested arrays may be empty). Return
 curl -s -X POST "$BASE/api/contacts" \
   -H "$H" \
   -H "Content-Type: application/json" \
-  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"invoices":[]}'
+  -d '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"invoices":[]}'
 ```
 
 ## Replace contact (PUT)
@@ -180,6 +180,38 @@ Delete:
 curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/opportunities/opp-new"
 ```
 
+## Orders
+
+Create or upsert (`id`, `title`, `status`, `orderedAt`, `total`, and `currency` required; `status` is one of `pending`, `confirmed`, `processing`, `fulfilled`, `cancelled`):
+
+```bash
+curl -s -X POST "$BASE/api/contacts/leyton%40finalproduction.club/orders" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"ord-new","title":"Supplies — studio","status":"confirmed","orderedAt":"2026-04-01","total":450,"currency":"GBP"}'
+```
+
+Get one:
+
+```bash
+curl -s -H "$H" "$BASE/api/contacts/leyton%40finalproduction.club/orders/ord-new"
+```
+
+Upsert with id in path:
+
+```bash
+curl -s -X PUT "$BASE/api/contacts/leyton%40finalproduction.club/orders/ord-new" \
+  -H "$H" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Supplies — studio","status":"fulfilled","orderedAt":"2026-04-01","total":450,"currency":"GBP","fulfilledAt":"2026-04-03"}'
+```
+
+Delete:
+
+```bash
+curl -s -H "$H" -X DELETE "$BASE/api/contacts/leyton%40finalproduction.club/orders/ord-new"
+```
+
 ## Invoices
 
 - **POST** `/api/contacts/{email}/invoices` — create or upsert (include `id` in JSON).
@@ -202,6 +234,7 @@ All require `Authorization: Bearer …`. Timeline uses **index** instead of id; 
 | Properties  | `.../properties`                     | `.../properties/{id}`           | `.../properties/{id}`                                       |
 | Quotes      | `.../quotes`                         | `.../quotes/{id}`               | `.../quotes/{id}`                                           |
 | Opportunities | `.../opportunities`               | `.../opportunities/{id}`        | `.../opportunities/{id}`                                    |
+| Orders      | `.../orders`                        | `.../orders/{id}`               | `.../orders/{id}`                                           |
 | Inquiries   | `.../inquiries`                     | `.../inquiries/{id}`            | `.../inquiries/{id}`                                        |
 | Contracts   | `.../contracts`                     | `.../contracts/{id}`           | `.../contracts/{id}`                                        |
 | Timeline    | `.../timeline` (append, no id)       | `.../timeline/{index}`          | —                                                           |

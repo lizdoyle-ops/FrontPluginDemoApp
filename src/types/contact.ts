@@ -56,6 +56,24 @@ export interface Opportunity {
   notes?: string;
 }
 
+export type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "processing"
+  | "fulfilled"
+  | "cancelled";
+
+export interface Order {
+  id: string;
+  title: string;
+  status: OrderStatus;
+  orderedAt: string;
+  total: number;
+  currency: string;
+  fulfilledAt?: string;
+  notes?: string;
+}
+
 export type WorkOrderType =
   | "maintenance"
   | "repair"
@@ -149,6 +167,7 @@ export interface ContactData {
   inquiries: Inquiry[];
   cases: Case[];
   opportunities: Opportunity[];
+  orders: Order[];
   workOrders: WorkOrder[];
   contracts: Contract[];
   timeline: TimelineEvent[];
@@ -170,6 +189,7 @@ export const SECTION_IDS = [
   "properties",
   "quotes",
   "opportunities",
+  "orders",
   "cases",
   "workOrders",
   "contracts",

@@ -72,6 +72,17 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         notes: "Follow up after site visit",
       },
     ],
+    orders: [
+      {
+        id: "ord1",
+        title: "Equipment hire — Q1 shoot",
+        status: "processing",
+        orderedAt: "2026-03-20",
+        total: 1850,
+        currency: "GBP",
+        notes: "Camera package + grip",
+      },
+    ],
     workOrders: [
       {
         id: "wo1",
@@ -223,6 +234,17 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         expectedCloseDate: "2026-04-30",
       },
     ],
+    orders: [
+      {
+        id: "ord2",
+        title: "Catering — March corporate week",
+        status: "fulfilled",
+        orderedAt: "2026-03-01",
+        total: 4200,
+        currency: "GBP",
+        fulfilledAt: "2026-03-05",
+      },
+    ],
     workOrders: [
       {
         id: "wo3",
@@ -330,6 +352,16 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         currency: "GBP",
         expectedCloseDate: "2026-05-15",
         notes: "Partner approved budget range",
+      },
+    ],
+    orders: [
+      {
+        id: "ord3",
+        title: "Office fit-out supplies",
+        status: "confirmed",
+        orderedAt: "2026-03-28",
+        total: 890,
+        currency: "GBP",
       },
     ],
     workOrders: [

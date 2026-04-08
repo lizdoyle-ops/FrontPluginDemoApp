@@ -51,6 +51,23 @@ export const opportunitySchema = z.object({
   notes: z.string().optional(),
 });
 
+export const orderSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  status: z.enum([
+    "pending",
+    "confirmed",
+    "processing",
+    "fulfilled",
+    "cancelled",
+  ]),
+  orderedAt: z.string(),
+  total: z.number(),
+  currency: z.string(),
+  fulfilledAt: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 export const workOrderSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -133,6 +150,7 @@ export const contactDataSchema = z.object({
   inquiries: z.array(inquirySchema),
   cases: z.array(caseSchema),
   opportunities: z.array(opportunitySchema),
+  orders: z.array(orderSchema),
   workOrders: z.array(workOrderSchema),
   contracts: z.array(contractSchema),
   timeline: z.array(timelineSchema),

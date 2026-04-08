@@ -9,6 +9,7 @@ import {
   Home,
   Layers,
   Paperclip,
+  ShoppingCart,
   TrendingUp,
   Wrench,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { ContractsSection } from "@/components/dashboard/sections/ContractsSecti
 import { DynamicCustomListSection } from "@/components/dashboard/sections/DynamicCustomListSection";
 import { InvoicesSection } from "@/components/dashboard/sections/InvoicesSection";
 import { OpportunitiesSection } from "@/components/dashboard/sections/OpportunitiesSection";
+import { OrdersSection } from "@/components/dashboard/sections/OrdersSection";
 import { PropertiesSection } from "@/components/dashboard/sections/PropertiesSection";
 import { QuotesSection } from "@/components/dashboard/sections/QuotesSection";
 import { TimelineSection } from "@/components/dashboard/sections/TimelineSection";
@@ -41,6 +43,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
   properties: "Properties",
   quotes: "Quotes",
   opportunities: "Opportunities",
+  orders: "Orders",
   cases: "Support cases",
   workOrders: "Work orders",
   contracts: "Contracts",
@@ -53,6 +56,7 @@ const SECTION_ICONS: Record<SectionId, LucideIcon> = {
   properties: Home,
   quotes: FileText,
   opportunities: TrendingUp,
+  orders: ShoppingCart,
   cases: Headphones,
   workOrders: Wrench,
   contracts: FileSignature,
@@ -160,6 +164,10 @@ export function ContactDashboard({
     opportunities: {
       count: contact.opportunities.length,
       node: <OpportunitiesSection items={contact.opportunities} />,
+    },
+    orders: {
+      count: contact.orders.length,
+      node: <OrdersSection items={contact.orders} />,
     },
     cases: {
       count: contact.cases.length,

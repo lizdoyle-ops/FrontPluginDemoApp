@@ -284,6 +284,70 @@ paths:
       responses:
         "200": { description: Updated contact }
         "404": { description: Contact not found }
+  /api/contacts/{email}/orders:
+    post:
+      summary: Create or upsert order (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/orders/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one order by id
+      responses:
+        "200":
+          description: Order JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert order; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert order (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove order
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
   /api/contacts/{email}/cases:
     post:
       summary: Create or upsert support case (id in body)
@@ -766,6 +830,25 @@ components:
         currency: { type: string }
         expectedCloseDate: { type: string }
         notes: { type: string }
+    Order:
+      type: object
+      required: [id, title, status, orderedAt, total, currency]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - processing
+            - fulfilled
+            - cancelled
+        orderedAt: { type: string }
+        total: { type: number }
+        currency: { type: string }
+        fulfilledAt: { type: string }
+        notes: { type: string }
     Case:
       type: object
       required: [id, subject, status, openedAt]
@@ -893,6 +976,7 @@ components:
         - properties
         - quotes
         - opportunities
+        - orders
         - inquiries
         - cases
         - workOrders
@@ -918,6 +1002,9 @@ components:
         opportunities:
           type: array
           items: { $ref: "#/components/schemas/Opportunity" }
+        orders:
+          type: array
+          items: { $ref: "#/components/schemas/Order" }
         inquiries:
           type: array
           items: { $ref: "#/components/schemas/Inquiry" }
