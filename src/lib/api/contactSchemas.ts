@@ -124,6 +124,79 @@ export const attachmentSchema = z.object({
   uploadedAt: z.string(),
 });
 
+export const petPreExistingConditionSchema = z.object({
+  condition: z.string(),
+  notedDate: z.string(),
+  status: z.string(),
+  excludedFromCover: z.boolean(),
+});
+
+export const petSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  species: z.string(),
+  breed: z.string().optional(),
+  dob: z.string().optional(),
+  age: z.number().optional(),
+  gender: z.enum(["male", "female", "unknown"]).optional(),
+  neutered: z.boolean().optional(),
+  microchip: z.string().optional(),
+  preExistingConditions: z.array(petPreExistingConditionSchema).default([]),
+  authorisedContacts: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const policySchema = z.object({
+  id: z.string(),
+  policyNumber: z.string(),
+  product: z.string(),
+  status: z.string(),
+  startDate: z.string(),
+  renewalDate: z.string(),
+  annualPremium: z.number(),
+  paymentFrequency: z.string(),
+  monthlyDirectDebit: z.number(),
+  paymentStatus: z.string(),
+});
+
+export const policyholderSchema = z.object({
+  name: z.string(),
+  dob: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  address: z.string(),
+  authorisedContacts: z.array(z.string()),
+});
+
+export const coverExcessSchema = z.object({
+  fixed: z.number(),
+  coInsurance: z.string(),
+});
+
+export const coverSchema = z.object({
+  vetFeeLimit: z.number(),
+  vetFeeLimitType: z.string(),
+  remainingLimitThisYear: z.number(),
+  excess: coverExcessSchema,
+  complementaryTreatment: z.number(),
+  dental: z.number(),
+  thirdPartyLiability: z.number(),
+  exclusions: z.array(z.string()),
+});
+
+export const claimHistoryItemSchema = z.object({
+  id: z.string(),
+  claimId: z.string(),
+  dateSubmitted: z.string(),
+  condition: z.string(),
+  vet: z.string(),
+  amountClaimed: z.number(),
+  amountPaid: z.number(),
+  excessApplied: z.number(),
+  coInsuranceApplied: z.number(),
+  status: z.string(),
+});
+
 /** String map with required unique `id`; server fills `id` if omitted or empty. */
 export const customListRowSchema = z
   .record(z.string(), z.string())
@@ -155,6 +228,11 @@ export const contactDataSchema = z.object({
   contracts: z.array(contractSchema),
   timeline: z.array(timelineSchema),
   attachments: z.array(attachmentSchema),
+  pets: z.array(petSchema),
+  policies: z.array(policySchema),
+  policyholder: policyholderSchema,
+  cover: coverSchema,
+  claimsHistory: z.array(claimHistoryItemSchema),
   invoices: z.array(invoiceSchema),
   customLists: z.record(z.string(), z.array(stringRow)).optional(),
 });

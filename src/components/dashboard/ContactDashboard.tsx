@@ -9,7 +9,12 @@ import {
   Home,
   Layers,
   Paperclip,
+  PawPrint,
+  ScrollText,
+  Shield,
   ShoppingCart,
+  Umbrella,
+  UserRound,
   TrendingUp,
   Wrench,
 } from "lucide-react";
@@ -18,12 +23,17 @@ import type { LucideIcon } from "lucide-react";
 import { CollapsibleSection } from "@/components/dashboard/CollapsibleSection";
 import { ContactCard } from "@/components/dashboard/ContactCard";
 import { AttachmentsSection } from "@/components/dashboard/sections/AttachmentsSection";
+import { ClaimsHistorySection } from "@/components/dashboard/sections/ClaimsHistorySection";
+import { CoverSection } from "@/components/dashboard/sections/CoverSection";
 import { CasesSection } from "@/components/dashboard/sections/CasesSection";
 import { ContractsSection } from "@/components/dashboard/sections/ContractsSection";
 import { DynamicCustomListSection } from "@/components/dashboard/sections/DynamicCustomListSection";
 import { InvoicesSection } from "@/components/dashboard/sections/InvoicesSection";
 import { OpportunitiesSection } from "@/components/dashboard/sections/OpportunitiesSection";
 import { OrdersSection } from "@/components/dashboard/sections/OrdersSection";
+import { PetsSection } from "@/components/dashboard/sections/PetsSection";
+import { PoliciesSection } from "@/components/dashboard/sections/PoliciesSection";
+import { PolicyholderSection } from "@/components/dashboard/sections/PolicyholderSection";
 import { PropertiesSection } from "@/components/dashboard/sections/PropertiesSection";
 import { QuotesSection } from "@/components/dashboard/sections/QuotesSection";
 import { TimelineSection } from "@/components/dashboard/sections/TimelineSection";
@@ -50,6 +60,11 @@ const SECTION_LABELS: Record<SectionId, string> = {
   invoices: "Invoices",
   timeline: "Timeline",
   attachments: "Attachments",
+  pets: "Pets",
+  policies: "Policies",
+  policyholder: "Policyholder",
+  cover: "Cover",
+  claimsHistory: "Claims",
 };
 
 const SECTION_ICONS: Record<SectionId, LucideIcon> = {
@@ -63,6 +78,11 @@ const SECTION_ICONS: Record<SectionId, LucideIcon> = {
   invoices: Banknote,
   timeline: Clock,
   attachments: Paperclip,
+  pets: PawPrint,
+  policies: Shield,
+  policyholder: UserRound,
+  cover: Umbrella,
+  claimsHistory: ScrollText,
 };
 
 export function ContactDashboard({
@@ -197,6 +217,30 @@ export function ContactDashboard({
     attachments: {
       count: contact.attachments.length,
       node: <AttachmentsSection items={contact.attachments} />,
+    },
+    pets: {
+      count: contact.pets.length,
+      node: <PetsSection items={contact.pets} />,
+    },
+    policies: {
+      count: contact.policies.length,
+      node: <PoliciesSection items={contact.policies} />,
+    },
+    policyholder: {
+      count: contact.policyholder.name.trim() ? 1 : 0,
+      node: <PolicyholderSection data={contact.policyholder} />,
+    },
+    cover: {
+      count:
+        contact.cover.vetFeeLimit > 0 ||
+        contact.cover.exclusions.length > 0 ?
+          1
+        : 0,
+      node: <CoverSection data={contact.cover} />,
+    },
+    claimsHistory: {
+      count: contact.claimsHistory.length,
+      node: <ClaimsHistorySection items={contact.claimsHistory} />,
     },
   };
 

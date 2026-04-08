@@ -349,6 +349,120 @@ const rows: { object: string; methods: string; path: string; note: string }[] =
       note: "Delete attachment by id.",
     },
     {
+      object: "Pets",
+      methods: "POST",
+      path: "/api/contacts/{email}/pets",
+      note: "Upsert pet (id, name, species; optional breed, dob, age, gender, neutered, microchip, preExistingConditions[], legacy authorisedContacts, notes).",
+    },
+    {
+      object: "Pet",
+      methods: "GET",
+      path: "/api/contacts/{email}/pets/{id}",
+      note: "Read one pet JSON.",
+    },
+    {
+      object: "Pet",
+      methods: "POST",
+      path: "/api/contacts/{email}/pets/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Pet",
+      methods: "PUT",
+      path: "/api/contacts/{email}/pets/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Pet",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/pets/{id}",
+      note: "Delete pet by id.",
+    },
+    {
+      object: "Policies",
+      methods: "POST",
+      path: "/api/contacts/{email}/policies",
+      note: "Upsert policy (id, policyNumber, product, status, startDate, renewalDate, annualPremium, paymentFrequency, monthlyDirectDebit, paymentStatus).",
+    },
+    {
+      object: "Policy",
+      methods: "GET",
+      path: "/api/contacts/{email}/policies/{id}",
+      note: "Read one policy JSON.",
+    },
+    {
+      object: "Policy",
+      methods: "POST",
+      path: "/api/contacts/{email}/policies/{id}",
+      note: "Upsert (201).",
+    },
+    {
+      object: "Policy",
+      methods: "PUT",
+      path: "/api/contacts/{email}/policies/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Policy",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/policies/{id}",
+      note: "Delete policy by id.",
+    },
+    {
+      object: "Policyholder",
+      methods: "GET",
+      path: "/api/contacts/{email}/policyholder",
+      note: "Single policyholder object per contact (name, dob, email, phone, address, authorisedContacts[]).",
+    },
+    {
+      object: "Policyholder",
+      methods: "PUT",
+      path: "/api/contacts/{email}/policyholder",
+      note: "Replace policyholder; returns full contact.",
+    },
+    {
+      object: "Cover",
+      methods: "GET",
+      path: "/api/contacts/{email}/cover",
+      note: "Limits, excess (fixed + coInsurance text), buckets, exclusions[].",
+    },
+    {
+      object: "Cover",
+      methods: "PUT",
+      path: "/api/contacts/{email}/cover",
+      note: "Replace cover; returns full contact.",
+    },
+    {
+      object: "Claims",
+      methods: "POST",
+      path: "/api/contacts/{email}/claims",
+      note: "Create or upsert claim (id + claimId + amounts + vet + status; stored on claimsHistory).",
+    },
+    {
+      object: "Claim",
+      methods: "GET",
+      path: "/api/contacts/{email}/claims/{id}",
+      note: "Read one claim by stable id.",
+    },
+    {
+      object: "Claim",
+      methods: "POST",
+      path: "/api/contacts/{email}/claims/{id}",
+      note: "Upsert (201); path id merged onto body.",
+    },
+    {
+      object: "Claim",
+      methods: "PUT",
+      path: "/api/contacts/{email}/claims/{id}",
+      note: "Upsert (200).",
+    },
+    {
+      object: "Claim",
+      methods: "DELETE",
+      path: "/api/contacts/{email}/claims/{id}",
+      note: "Remove claim from claimsHistory.",
+    },
+    {
       object: "Timeline",
       methods: "POST",
       path: "/api/contacts/{email}/timeline",
@@ -449,10 +563,13 @@ export function ApiDocsClient({
         </h2>
         <p className="mb-2 text-[11px] leading-relaxed text-zinc-500">
           For cases, properties, quotes, opportunities, orders, inquiries, contracts,
-          attachments, work orders, and invoices: use{" "}
+          attachments, pets, policies, claims, work orders, and invoices: use{" "}
           <strong>GET …/&#123;id&#125;</strong> to read one item and{" "}
           <strong>POST</strong> or <strong>PUT</strong> <strong>…/&#123;id&#125;</strong> to upsert
-          (path id is merged into the JSON body). <strong>Cases</strong> use the same pattern.
+          (path id is merged into the JSON body). <strong>Policyholder</strong> and{" "}
+          <strong>cover</strong> are singletons per contact: <strong>GET</strong> and{" "}
+          <strong>PUT</strong> only on <code className="rounded bg-zinc-100 px-0.5">…/policyholder</code>{" "}
+          and <code className="rounded bg-zinc-100 px-0.5">…/cover</code>.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] border-collapse text-left text-[11px]">

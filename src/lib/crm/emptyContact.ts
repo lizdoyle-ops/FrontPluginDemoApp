@@ -1,4 +1,5 @@
 import type { ContactData } from "@/types/contact";
+import { emptyCover, emptyPolicyholder } from "@/types/insurance";
 
 export function emptyContact(email: string, name: string): ContactData {
   const e = email.trim();
@@ -20,6 +21,11 @@ export function emptyContact(email: string, name: string): ContactData {
     contracts: [],
     timeline: [],
     attachments: [],
+    pets: [],
+    policies: [],
+    policyholder: emptyPolicyholder(),
+    cover: emptyCover(),
+    claimsHistory: [],
     invoices: [],
     customLists: {},
   };

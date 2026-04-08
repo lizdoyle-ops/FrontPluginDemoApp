@@ -152,6 +152,25 @@ export interface Attachment {
   uploadedAt: string;
 }
 
+import type {
+  ClaimHistoryItem,
+  Cover,
+  Pet,
+  Policy,
+  Policyholder,
+} from "./insurance";
+
+export type {
+  ClaimHistoryItem,
+  Cover,
+  CoverExcess,
+  Pet,
+  PetGender,
+  PetPreExistingCondition,
+  Policy,
+  Policyholder,
+} from "./insurance";
+
 /** Custom list row: stable unique id plus string field values (admin-defined keys). */
 export type CustomListRow = { id: string } & Record<string, string>;
 
@@ -172,6 +191,11 @@ export interface ContactData {
   contracts: Contract[];
   timeline: TimelineEvent[];
   attachments: Attachment[];
+  pets: Pet[];
+  policies: Policy[];
+  policyholder: Policyholder;
+  cover: Cover;
+  claimsHistory: ClaimHistoryItem[];
   invoices: Invoice[];
   /** Rows for user-defined object types (Admin centre); keyed by CustomObjectDefinition.id */
   customLists?: Record<string, CustomListRow[]>;
@@ -196,6 +220,11 @@ export const SECTION_IDS = [
   "invoices",
   "timeline",
   "attachments",
+  "pets",
+  "policies",
+  "policyholder",
+  "cover",
+  "claimsHistory",
 ] as const;
 
 export type SectionId = (typeof SECTION_IDS)[number];

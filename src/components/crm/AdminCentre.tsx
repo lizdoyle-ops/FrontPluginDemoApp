@@ -35,6 +35,11 @@ const SECTION_LABELS: Record<SectionId, string> = {
   invoices: "Invoices",
   timeline: "Timeline",
   attachments: "Attachments",
+  pets: "Pets",
+  policies: "Policies",
+  policyholder: "Policyholder",
+  cover: "Cover",
+  claimsHistory: "Claims",
 };
 
 function SortableRow({

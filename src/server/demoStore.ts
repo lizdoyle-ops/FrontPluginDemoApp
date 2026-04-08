@@ -2,11 +2,66 @@ import fs from "fs";
 import path from "path";
 import { MOCK_CONTACTS } from "@/data/mockData";
 import type { ContactData, CustomListRow, TimelineEvent } from "@/types/contact";
+import { emptyCover, emptyPolicyholder } from "@/types/insurance";
+import type { Pet, Policy } from "@/types/insurance";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "demo-store.json");
 
 type StoreShape = Record<string, ContactData>;
+
+function migratePolicy(raw: unknown): Policy {
+  const o = raw as Record<string, unknown>;
+  if (
+    o &&
+    typeof o.product === "string" &&
+    typeof o.annualPremium === "number"
+  ) {
+    return raw as Policy;
+  }
+  const leg = raw as Record<string, unknown>;
+  return {
+    id: String(leg.id ?? "pol"),
+    policyNumber: String(leg.policyNumber ?? leg.id ?? ""),
+    product: String(leg.title ?? "Policy"),
+    status: String(leg.status ?? ""),
+    startDate: String(leg.startDate ?? ""),
+    renewalDate: String(leg.endDate ?? leg.startDate ?? ""),
+    annualPremium: 0,
+    paymentFrequency: "",
+    monthlyDirectDebit: 0,
+    paymentStatus: "",
+  };
+}
+
+function migratePet(raw: unknown): Pet {
+  const p = raw as Record<string, unknown>;
+  if (Array.isArray(p.preExistingConditions)) {
+    return raw as Pet;
+  }
+  const sp = String(p.species ?? "other");
+  const speciesTitle =
+    sp === "dog" ? "Dog"
+    : sp === "cat" ? "Cat"
+    : sp === "bird" ? "Bird"
+    : sp === "reptile" ? "Reptile"
+    : sp === "other" ? "Other"
+    : sp;
+  return {
+    id: String(p.id),
+    name: String(p.name ?? ""),
+    species: speciesTitle,
+    breed: p.breed as string | undefined,
+    dob: p.dob as string | undefined,
+    age: typeof p.age === "number" ? p.age : undefined,
+    gender: p.gender as Pet["gender"] | undefined,
+    neutered: p.neutered as boolean | undefined,
+    microchip: p.microchip as string | undefined,
+    preExistingConditions: [],
+    authorisedContacts: p.authorisedContacts as string | undefined,
+    notes: p.notes as string | undefined,
+  };
+}
 
 function newCustomListRowId(): string {
   return `clr-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
@@ -35,7 +90,23 @@ export function normalizeContactForStore(c: ContactData): ContactData {
 
   const opportunities = c.opportunities ?? [];
   const orders = c.orders ?? [];
-  return { ...c, timeline, customLists, opportunities, orders };
+  const pets = (c.pets ?? []).map(migratePet);
+  const policies = (c.policies ?? []).map(migratePolicy);
+  const policyholder = c.policyholder ?? emptyPolicyholder();
+  const cover = c.cover ?? emptyCover();
+  const claimsHistory = c.claimsHistory ?? [];
+  return {
+    ...c,
+    timeline,
+    customLists,
+    opportunities,
+    orders,
+    pets,
+    policies,
+    policyholder,
+    cover,
+    claimsHistory,
+  };
 }
 
 function normalizeEntireStore(contacts: StoreShape): StoreShape {
@@ -159,6 +230,9 @@ export type NestedIdCollectionKey =
   | "workOrders"
   | "contracts"
   | "attachments"
+  | "pets"
+  | "policies"
+  | "claimsHistory"
   | "invoices";
 
 export function upsertNestedContactItem<K extends NestedIdCollectionKey>(

@@ -27,10 +27,12 @@ import { ApiDocsClient } from "@/components/api-docs/ApiDocsClient";
 import { AdminCentre } from "@/components/crm/AdminCentre";
 import { CustomListsEditor } from "@/components/crm/CustomListsEditor";
 import { RecordIdLine } from "@/components/ui/RecordIdLine";
+import { petPreExistingConditionSchema } from "@/lib/api/contactSchemas";
 import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
 import { getDemoApiToken } from "@/lib/demoApiToken";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
 import { emptyContact } from "@/lib/crm/emptyContact";
+import { z } from "zod";
 import type { ContactData } from "@/types/contact";
 
 const jsonAuth = (): HeadersInit => ({
@@ -50,6 +52,11 @@ type TabId =
   | "contracts"
   | "timeline"
   | "attachments"
+  | "pets"
+  | "policies"
+  | "policyholder"
+  | "cover"
+  | "claimsHistory"
   | "inquiries"
   | "customLists";
 
@@ -65,6 +72,11 @@ const BASE_TABS: { id: TabId; label: string }[] = [
   { id: "contracts", label: "Contracts" },
   { id: "timeline", label: "Timeline" },
   { id: "attachments", label: "Attachments" },
+  { id: "pets", label: "Pets" },
+  { id: "policies", label: "Policies" },
+  { id: "policyholder", label: "Policyholder" },
+  { id: "cover", label: "Cover" },
+  { id: "claimsHistory", label: "Claims" },
   { id: "inquiries", label: "Inquiries" },
 ];
 
@@ -1115,6 +1127,251 @@ export function CrmHomeClient() {
               },
             }),
         );
+      case "pets":
+        return renderTable(
+          contact.pets as unknown as Record<string, unknown>[],
+          [
+            { key: "id", label: "ID" },
+            { key: "name", label: "Name" },
+            { key: "species", label: "Species" },
+            { key: "breed", label: "Breed" },
+            { key: "microchip", label: "Microchip" },
+          ],
+          (row, i) => {
+            const pre = row.preExistingConditions;
+            const preJson =
+              Array.isArray(pre) ? JSON.stringify(pre, null, 2) : "[]";
+            return setModal({
+              kind: "edit",
+              recordKey: "pet",
+              index: i,
+              draft: {
+                id: String(row.id ?? ""),
+                name: String(row.name ?? ""),
+                species: String(row.species ?? "Dog"),
+                breed: String(row.breed ?? ""),
+                dob: String(row.dob ?? ""),
+                age: row.age != null ? String(row.age) : "",
+                gender: String(row.gender ?? "unknown"),
+                neutered: row.neutered === true ? "yes" : "no",
+                microchip: String(row.microchip ?? ""),
+                preConditionsJson: preJson,
+                authorisedContacts: String(row.authorisedContacts ?? ""),
+                notes: String(row.notes ?? ""),
+              },
+            });
+          },
+          (row, i) => {
+            const next = contact.pets.filter((_, j) => j !== i);
+            void patchArrays("pets", next);
+          },
+          "Add pet",
+          () =>
+            setModal({
+              kind: "edit",
+              recordKey: "pet",
+              draft: {
+                id: `pet-${Date.now()}`,
+                name: "",
+                species: "Dog",
+                breed: "",
+                dob: "",
+                age: "",
+                gender: "unknown",
+                neutered: "no",
+                microchip: "",
+                preConditionsJson: "[]",
+                authorisedContacts: "",
+                notes: "",
+              },
+            }),
+        );
+      case "policies":
+        return renderTable(
+          contact.policies as unknown as Record<string, unknown>[],
+          [
+            { key: "id", label: "ID" },
+            { key: "policyNumber", label: "Policy #" },
+            { key: "product", label: "Product" },
+            { key: "status", label: "Status" },
+            { key: "annualPremium", label: "Premium" },
+          ],
+          (row, i) =>
+            setModal({
+              kind: "edit",
+              recordKey: "policy",
+              index: i,
+              draft: {
+                id: String(row.id ?? ""),
+                policyNumber: String(row.policyNumber ?? ""),
+                product: String(row.product ?? ""),
+                status: String(row.status ?? ""),
+                startDate: String(row.startDate ?? ""),
+                renewalDate: String(row.renewalDate ?? ""),
+                annualPremium: String(row.annualPremium ?? "0"),
+                paymentFrequency: String(row.paymentFrequency ?? ""),
+                monthlyDirectDebit: String(row.monthlyDirectDebit ?? "0"),
+                paymentStatus: String(row.paymentStatus ?? ""),
+              },
+            }),
+          (row, i) => {
+            const next = contact.policies.filter((_, j) => j !== i);
+            void patchArrays("policies", next);
+          },
+          "Add policy",
+          () =>
+            setModal({
+              kind: "edit",
+              recordKey: "policy",
+              draft: {
+                id: `pol-${Date.now()}`,
+                policyNumber: "",
+                product: "",
+                status: "Active",
+                startDate: new Date().toISOString().slice(0, 10),
+                renewalDate: "",
+                annualPremium: "0",
+                paymentFrequency: "Monthly",
+                monthlyDirectDebit: "0",
+                paymentStatus: "",
+              },
+            }),
+        );
+      case "policyholder":
+        return (
+          <div className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <div className="text-[13px] text-zinc-700">
+              <p className="text-[15px] font-semibold text-zinc-900">
+                {contact.policyholder.name || "—"}
+              </p>
+              <p className="mt-1">{contact.policyholder.email}</p>
+              <p className="mt-1 text-zinc-600">{contact.policyholder.phone}</p>
+              <p className="mt-2 text-[12px] text-zinc-500">
+                {contact.policyholder.address}
+              </p>
+              {contact.policyholder.authorisedContacts.length ? (
+                <p className="mt-2 text-[12px] text-zinc-600">
+                  Authorised:{" "}
+                  {contact.policyholder.authorisedContacts.join(", ")}
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-[12px] font-medium text-zinc-800 hover:bg-zinc-100"
+              onClick={() =>
+                setModal({
+                  kind: "edit",
+                  recordKey: "policyholder",
+                  draft: {
+                    name: contact.policyholder.name,
+                    dob: contact.policyholder.dob,
+                    email: contact.policyholder.email,
+                    phone: contact.policyholder.phone,
+                    address: contact.policyholder.address,
+                    authorisedContactsText:
+                      contact.policyholder.authorisedContacts.join("\n"),
+                  },
+                })
+              }
+            >
+              Edit policyholder
+            </button>
+          </div>
+        );
+      case "cover":
+        return (
+          <div className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+            <dl className="grid grid-cols-2 gap-2 text-[12px] text-zinc-700">
+              <dt className="text-zinc-500">Vet fee limit</dt>
+              <dd>£{contact.cover.vetFeeLimit.toLocaleString()}</dd>
+              <dt className="text-zinc-500">Remaining (year)</dt>
+              <dd>£{contact.cover.remainingLimitThisYear.toLocaleString()}</dd>
+              <dt className="text-zinc-500">Excess</dt>
+              <dd>£{contact.cover.excess.fixed}</dd>
+            </dl>
+            <button
+              type="button"
+              className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-[12px] font-medium text-zinc-800 hover:bg-zinc-100"
+              onClick={() =>
+                setModal({
+                  kind: "edit",
+                  recordKey: "cover",
+                  draft: {
+                    vetFeeLimit: String(contact.cover.vetFeeLimit),
+                    vetFeeLimitType: contact.cover.vetFeeLimitType,
+                    remainingLimitThisYear: String(
+                      contact.cover.remainingLimitThisYear,
+                    ),
+                    excessFixed: String(contact.cover.excess.fixed),
+                    excessCoInsurance: contact.cover.excess.coInsurance,
+                    complementaryTreatment: String(
+                      contact.cover.complementaryTreatment,
+                    ),
+                    dental: String(contact.cover.dental),
+                    thirdPartyLiability: String(
+                      contact.cover.thirdPartyLiability,
+                    ),
+                    exclusionsText: contact.cover.exclusions.join("\n"),
+                  },
+                })
+              }
+            >
+              Edit cover
+            </button>
+          </div>
+        );
+      case "claimsHistory":
+        return renderTable(
+          contact.claimsHistory as unknown as Record<string, unknown>[],
+          [
+            { key: "claimId", label: "Claim ID" },
+            { key: "dateSubmitted", label: "Submitted" },
+            { key: "condition", label: "Condition" },
+            { key: "amountPaid", label: "Paid" },
+            { key: "status", label: "Status" },
+          ],
+          (row, i) =>
+            setModal({
+              kind: "edit",
+              recordKey: "claim",
+              index: i,
+              draft: {
+                id: String(row.id ?? ""),
+                claimId: String(row.claimId ?? row.id ?? ""),
+                dateSubmitted: String(row.dateSubmitted ?? ""),
+                condition: String(row.condition ?? ""),
+                vet: String(row.vet ?? ""),
+                amountClaimed: String(row.amountClaimed ?? "0"),
+                amountPaid: String(row.amountPaid ?? "0"),
+                excessApplied: String(row.excessApplied ?? "0"),
+                coInsuranceApplied: String(row.coInsuranceApplied ?? "0"),
+                status: String(row.status ?? ""),
+              },
+            }),
+          (row, i) => {
+            const next = contact.claimsHistory.filter((_, j) => j !== i);
+            void patchArrays("claimsHistory", next);
+          },
+          "Add claim",
+          () =>
+            setModal({
+              kind: "edit",
+              recordKey: "claim",
+              draft: {
+                id: `CLM-${Date.now()}`,
+                claimId: `CLM-${Date.now()}`,
+                dateSubmitted: new Date().toISOString().slice(0, 10),
+                condition: "",
+                vet: "",
+                amountClaimed: "0",
+                amountPaid: "0",
+                excessApplied: "0",
+                coInsuranceApplied: "0",
+                status: "Submitted",
+              },
+            }),
+        );
       case "inquiries":
         return renderTable(
           contact.inquiries as unknown as Record<string, unknown>[],
@@ -1309,6 +1566,125 @@ export function CrmHomeClient() {
       if (index !== undefined) list[index] = a;
       else list.push(a);
       void patchArrays("attachments", list);
+      setModal(null);
+      return;
+    }
+    if (recordKey === "pet") {
+      let preExistingConditions: z.infer<typeof petPreExistingConditionSchema>[] =
+        [];
+      try {
+        const raw = JSON.parse(draft.preConditionsJson || "[]");
+        const pr = z.array(petPreExistingConditionSchema).safeParse(raw);
+        if (!pr.success) {
+          showToast("Invalid pre-existing conditions JSON.");
+          return;
+        }
+        preExistingConditions = pr.data;
+      } catch {
+        showToast("Invalid pre-existing conditions JSON.");
+        return;
+      }
+      const g = draft.gender;
+      const pet = {
+        id: draft.id,
+        name: draft.name,
+        species: draft.species,
+        breed: draft.breed.trim() || undefined,
+        dob: draft.dob.trim() || undefined,
+        age: draft.age.trim() ? Number(draft.age) : undefined,
+        gender:
+          g === "male" || g === "female" || g === "unknown" ?
+            (g as "male" | "female" | "unknown")
+          : undefined,
+        neutered:
+          draft.neutered === "yes" ? true
+          : draft.neutered === "no" ? false
+          : undefined,
+        microchip: draft.microchip.trim() || undefined,
+        preExistingConditions,
+        authorisedContacts: draft.authorisedContacts.trim() || undefined,
+        notes: draft.notes.trim() || undefined,
+      };
+      const list = [...contact.pets];
+      if (index !== undefined) list[index] = pet;
+      else list.push(pet);
+      void patchArrays("pets", list);
+      setModal(null);
+      return;
+    }
+    if (recordKey === "policy") {
+      const pol = {
+        id: draft.id,
+        policyNumber: draft.policyNumber,
+        product: draft.product,
+        status: draft.status,
+        startDate: draft.startDate,
+        renewalDate: draft.renewalDate,
+        annualPremium: Number(draft.annualPremium) || 0,
+        paymentFrequency: draft.paymentFrequency,
+        monthlyDirectDebit: Number(draft.monthlyDirectDebit) || 0,
+        paymentStatus: draft.paymentStatus,
+      };
+      const list = [...contact.policies];
+      if (index !== undefined) list[index] = pol;
+      else list.push(pol);
+      void patchArrays("policies", list);
+      setModal(null);
+      return;
+    }
+    if (recordKey === "policyholder") {
+      const authorisedContacts = draft.authorisedContactsText
+        .split("\n")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      void patchArrays("policyholder", {
+        name: draft.name,
+        dob: draft.dob,
+        email: draft.email,
+        phone: draft.phone,
+        address: draft.address,
+        authorisedContacts,
+      });
+      setModal(null);
+      return;
+    }
+    if (recordKey === "cover") {
+      void patchArrays("cover", {
+        vetFeeLimit: Number(draft.vetFeeLimit) || 0,
+        vetFeeLimitType: draft.vetFeeLimitType,
+        remainingLimitThisYear: Number(draft.remainingLimitThisYear) || 0,
+        excess: {
+          fixed: Number(draft.excessFixed) || 0,
+          coInsurance: draft.excessCoInsurance,
+        },
+        complementaryTreatment: Number(draft.complementaryTreatment) || 0,
+        dental: Number(draft.dental) || 0,
+        thirdPartyLiability: Number(draft.thirdPartyLiability) || 0,
+        exclusions: draft.exclusionsText
+          .split("\n")
+          .map((s: string) => s.trim())
+          .filter(Boolean),
+      });
+      setModal(null);
+      return;
+    }
+    if (recordKey === "claim") {
+      const cl = {
+        id: draft.id,
+        claimId: (draft.claimId || draft.id).trim(),
+        dateSubmitted: draft.dateSubmitted,
+        condition: draft.condition,
+        vet: draft.vet,
+        amountClaimed: Number(draft.amountClaimed) || 0,
+        amountPaid: Number(draft.amountPaid) || 0,
+        excessApplied: Number(draft.excessApplied) || 0,
+        coInsuranceApplied: Number(draft.coInsuranceApplied) || 0,
+        status: draft.status,
+      };
+      const list = [...contact.claimsHistory];
+      if (index !== undefined) list[index] = cl;
+      else list.push(cl);
+      void patchArrays("claimsHistory", list);
       setModal(null);
       return;
     }
@@ -1800,6 +2176,604 @@ export function CrmHomeClient() {
                 value={d.notes}
                 onChange={(e) =>
                   setModal({ ...modal, draft: { ...d, notes: e.target.value } })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "pet":
+        return (
+          <>
+            <Field label="ID">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Name">
+              <input
+                className={inputClass()}
+                value={d.name}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, name: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Species">
+              <input
+                className={inputClass()}
+                value={d.species}
+                placeholder="e.g. Dog"
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, species: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Breed">
+              <input
+                className={inputClass()}
+                value={d.breed}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, breed: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="DOB">
+                <input
+                  className={inputClass()}
+                  value={d.dob}
+                  onChange={(e) =>
+                    setModal({ ...modal, draft: { ...d, dob: e.target.value } })
+                  }
+                />
+              </Field>
+              <Field label="Age">
+                <input
+                  type="number"
+                  className={inputClass()}
+                  value={d.age}
+                  onChange={(e) =>
+                    setModal({ ...modal, draft: { ...d, age: e.target.value } })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Gender">
+              <select
+                className={inputClass()}
+                value={d.gender}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, gender: e.target.value },
+                  })
+                }
+              >
+                <option value="unknown">Unknown</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </Field>
+            <Field label="Neutered">
+              <select
+                className={inputClass()}
+                value={d.neutered}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, neutered: e.target.value },
+                  })
+                }
+              >
+                <option value="">—</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </Field>
+            <Field label="Microchip">
+              <input
+                className={inputClass()}
+                value={d.microchip}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, microchip: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Pre-existing conditions (JSON array)">
+              <textarea
+                className={`${inputClass()} min-h-[120px] font-mono text-[11px]`}
+                value={d.preConditionsJson}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, preConditionsJson: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Authorised contacts (pet)">
+              <textarea
+                className={`${inputClass()} min-h-[48px]`}
+                value={d.authorisedContacts}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, authorisedContacts: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Notes">
+              <textarea
+                className={`${inputClass()} min-h-[72px]`}
+                value={d.notes}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, notes: e.target.value } })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "policy":
+        return (
+          <>
+            <Field label="ID">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Policy number">
+              <input
+                className={inputClass()}
+                value={d.policyNumber}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, policyNumber: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Product">
+              <input
+                className={inputClass()}
+                value={d.product}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, product: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Status">
+              <input
+                className={inputClass()}
+                value={d.status}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, status: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Start date">
+                <input
+                  className={inputClass()}
+                  value={d.startDate}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, startDate: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Renewal date">
+                <input
+                  className={inputClass()}
+                  value={d.renewalDate}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, renewalDate: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Annual premium (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.annualPremium}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, annualPremium: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Monthly DD (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.monthlyDirectDebit}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, monthlyDirectDebit: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Payment frequency">
+              <input
+                className={inputClass()}
+                value={d.paymentFrequency}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, paymentFrequency: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Payment status">
+              <input
+                className={inputClass()}
+                value={d.paymentStatus}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, paymentStatus: e.target.value },
+                  })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "policyholder":
+        return (
+          <>
+            <Field label="Name">
+              <input
+                className={inputClass()}
+                value={d.name}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, name: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Date of birth">
+              <input
+                className={inputClass()}
+                value={d.dob}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, dob: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Email">
+              <input
+                type="email"
+                className={inputClass()}
+                value={d.email}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, email: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Phone">
+              <input
+                className={inputClass()}
+                value={d.phone}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, phone: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Address">
+              <textarea
+                className={`${inputClass()} min-h-[64px]`}
+                value={d.address}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, address: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Authorised contacts (one per line)">
+              <textarea
+                className={`${inputClass()} min-h-[72px]`}
+                value={d.authorisedContactsText}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, authorisedContactsText: e.target.value },
+                  })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "cover":
+        return (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Vet fee limit (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.vetFeeLimit}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, vetFeeLimit: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Limit type">
+                <input
+                  className={inputClass()}
+                  value={d.vetFeeLimitType}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, vetFeeLimitType: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Remaining this year (£)">
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass()}
+                value={d.remainingLimitThisYear}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, remainingLimitThisYear: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Excess fixed (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.excessFixed}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, excessFixed: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Co-insurance / co-pay text">
+              <textarea
+                className={`${inputClass()} min-h-[56px]`}
+                value={d.excessCoInsurance}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, excessCoInsurance: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Complementary (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.complementaryTreatment}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, complementaryTreatment: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Dental (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.dental}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, dental: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Third-party liability (£)">
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass()}
+                value={d.thirdPartyLiability}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, thirdPartyLiability: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Exclusions (one per line)">
+              <textarea
+                className={`${inputClass()} min-h-[100px]`}
+                value={d.exclusionsText}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, exclusionsText: e.target.value },
+                  })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "claim":
+        return (
+          <>
+            <Field label="ID (path key)">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Claim ID">
+              <input
+                className={inputClass()}
+                value={d.claimId}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, claimId: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Date submitted">
+              <input
+                className={inputClass()}
+                value={d.dateSubmitted}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, dateSubmitted: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Condition">
+              <input
+                className={inputClass()}
+                value={d.condition}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, condition: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Vet">
+              <input
+                className={inputClass()}
+                value={d.vet}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, vet: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Amount claimed (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.amountClaimed}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, amountClaimed: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Amount paid (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.amountPaid}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, amountPaid: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Excess applied (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.excessApplied}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, excessApplied: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Co-insurance applied (£)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.coInsuranceApplied}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, coInsuranceApplied: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Status">
+              <input
+                className={inputClass()}
+                value={d.status}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, status: e.target.value } })
                 }
               />
             </Field>
