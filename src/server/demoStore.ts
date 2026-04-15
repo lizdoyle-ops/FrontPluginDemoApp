@@ -1,12 +1,122 @@
 import fs from "fs";
 import path from "path";
 import { MOCK_CONTACTS } from "@/data/mockData";
-import type { ContactData } from "@/types/contact";
+import type { ContactData, CustomListRow, TimelineEvent } from "@/types/contact";
+import { emptyCover, emptyPolicyholder } from "@/types/insurance";
+import type { Pet, Policy } from "@/types/insurance";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "demo-store.json");
 
 type StoreShape = Record<string, ContactData>;
+
+function migratePolicy(raw: unknown): Policy {
+  const o = raw as Record<string, unknown>;
+  if (
+    o &&
+    typeof o.product === "string" &&
+    typeof o.annualPremium === "number"
+  ) {
+    return raw as Policy;
+  }
+  const leg = raw as Record<string, unknown>;
+  return {
+    id: String(leg.id ?? "pol"),
+    policyNumber: String(leg.policyNumber ?? leg.id ?? ""),
+    product: String(leg.title ?? "Policy"),
+    status: String(leg.status ?? ""),
+    startDate: String(leg.startDate ?? ""),
+    renewalDate: String(leg.endDate ?? leg.startDate ?? ""),
+    annualPremium: 0,
+    paymentFrequency: "",
+    monthlyDirectDebit: 0,
+    paymentStatus: "",
+  };
+}
+
+function migratePet(raw: unknown): Pet {
+  const p = raw as Record<string, unknown>;
+  if (Array.isArray(p.preExistingConditions)) {
+    return raw as Pet;
+  }
+  const sp = String(p.species ?? "other");
+  const speciesTitle =
+    sp === "dog" ? "Dog"
+    : sp === "cat" ? "Cat"
+    : sp === "bird" ? "Bird"
+    : sp === "reptile" ? "Reptile"
+    : sp === "other" ? "Other"
+    : sp;
+  return {
+    id: String(p.id),
+    name: String(p.name ?? ""),
+    species: speciesTitle,
+    breed: p.breed as string | undefined,
+    dob: p.dob as string | undefined,
+    age: typeof p.age === "number" ? p.age : undefined,
+    gender: p.gender as Pet["gender"] | undefined,
+    neutered: p.neutered as boolean | undefined,
+    microchip: p.microchip as string | undefined,
+    preExistingConditions: [],
+    authorisedContacts: p.authorisedContacts as string | undefined,
+    notes: p.notes as string | undefined,
+  };
+}
+
+function newCustomListRowId(): string {
+  return `clr-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+/** Ensures custom list rows have ids; strips legacy timeline `id` fields. */
+export function normalizeContactForStore(c: ContactData): ContactData {
+  const timeline = (c.timeline ?? []).map((ev) => {
+    const legacy = ev as TimelineEvent & { id?: string };
+    const { id: _drop, ...rest } = legacy;
+    return rest as TimelineEvent;
+  });
+
+  const customLists = c.customLists
+    ? Object.fromEntries(
+        Object.entries(c.customLists).map(([listId, rows]) => [
+          listId,
+          rows.map((row) => {
+            const id = row.id?.trim();
+            if (id) return { ...row, id } as CustomListRow;
+            return { ...row, id: newCustomListRowId() } as CustomListRow;
+          }),
+        ]),
+      )
+    : c.customLists;
+
+  const opportunities = c.opportunities ?? [];
+  const orders = c.orders ?? [];
+  const pets = (c.pets ?? []).map(migratePet);
+  const policies = (c.policies ?? []).map(migratePolicy);
+  const policyholder = c.policyholder ?? emptyPolicyholder();
+  const cover = c.cover ?? emptyCover();
+  const claimsHistory = c.claimsHistory ?? [];
+  return {
+    ...c,
+    timeline,
+    customLists,
+    opportunities,
+    orders,
+    pets,
+    policies,
+    policyholder,
+    cover,
+    claimsHistory,
+  };
+}
+
+function normalizeEntireStore(contacts: StoreShape): StoreShape {
+  const out: StoreShape = {};
+  for (const c of Object.values(contacts)) {
+    const n = normalizeContactForStore(c);
+    out[n.email.trim().toLowerCase()] = n;
+  }
+  return out;
+}
 
 function normalizeStoreKeys(contacts: StoreShape): StoreShape {
   const out: StoreShape = {};
@@ -16,7 +126,9 @@ function normalizeStoreKeys(contacts: StoreShape): StoreShape {
   return out;
 }
 
-let memory: StoreShape = normalizeStoreKeys({ ...MOCK_CONTACTS });
+let memory: StoreShape = normalizeEntireStore(
+  normalizeStoreKeys({ ...MOCK_CONTACTS }),
+);
 
 function readFileStore(): StoreShape | null {
   try {
@@ -42,11 +154,10 @@ function writeFileStore(data: StoreShape) {
 
 export function initDemoStoreFromDisk() {
   const fromDisk = readFileStore();
-  if (fromDisk) {
-    memory = normalizeStoreKeys({ ...MOCK_CONTACTS, ...fromDisk });
-  } else {
-    memory = normalizeStoreKeys({ ...MOCK_CONTACTS });
-  }
+  const merged = fromDisk
+    ? normalizeStoreKeys({ ...MOCK_CONTACTS, ...fromDisk })
+    : normalizeStoreKeys({ ...MOCK_CONTACTS });
+  memory = normalizeEntireStore(merged);
 }
 
 function persist() {
@@ -81,7 +192,11 @@ export function putContact(email: string, data: ContactData) {
     delete memory[key];
   }
   const newKey = data.email.trim().toLowerCase();
-  memory[newKey] = { ...data, email: data.email.trim() };
+  const normalized = normalizeContactForStore({
+    ...data,
+    email: data.email.trim(),
+  });
+  memory[newKey] = normalized;
   persist();
 }
 
@@ -104,31 +219,84 @@ export function deleteContact(email: string): boolean {
   return true;
 }
 
+/** Keys for contact arrays keyed by string `id` on each item. */
+export type NestedIdCollectionKey =
+  | "properties"
+  | "quotes"
+  | "inquiries"
+  | "cases"
+  | "opportunities"
+  | "orders"
+  | "workOrders"
+  | "contracts"
+  | "attachments"
+  | "pets"
+  | "policies"
+  | "claimsHistory"
+  | "invoices";
+
+export function upsertNestedContactItem<K extends NestedIdCollectionKey>(
+  contactEmail: string,
+  key: K,
+  item: ContactData[K][number],
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const list = c[key] as { id: string }[];
+  const rest = list.filter((x) => x.id !== (item as { id: string }).id);
+  const next = { ...c, [key]: [...rest, item] } as ContactData;
+  putContact(c.email, next);
+  return next;
+}
+
+export function getNestedContactItem<K extends NestedIdCollectionKey>(
+  contactEmail: string,
+  key: K,
+  id: string,
+): ContactData[K][number] | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  return (c[key] as { id: string }[]).find((x) => x.id === id) as
+    | ContactData[K][number]
+    | undefined;
+}
+
+export function deleteNestedContactItem(
+  contactEmail: string,
+  key: NestedIdCollectionKey,
+  id: string,
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const list = c[key] as { id: string }[];
+  const next = {
+    ...c,
+    [key]: list.filter((x) => x.id !== id),
+  } as ContactData;
+  putContact(c.email, next);
+  return next;
+}
+
 /** Work order nested CRUD */
 export function upsertWorkOrder(
   contactEmail: string,
   workOrder: ContactData["workOrders"][number],
 ): ContactData | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  const rest = c.workOrders.filter((w) => w.id !== workOrder.id);
-  const next = { ...c, workOrders: [...rest, workOrder] };
-  putContact(c.email, next);
-  return next;
+  return upsertNestedContactItem(contactEmail, "workOrders", workOrder);
+}
+
+export function getWorkOrder(
+  contactEmail: string,
+  workOrderId: string,
+): ContactData["workOrders"][number] | undefined {
+  return getNestedContactItem(contactEmail, "workOrders", workOrderId);
 }
 
 export function deleteWorkOrder(
   contactEmail: string,
   workOrderId: string,
 ): ContactData | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  const next = {
-    ...c,
-    workOrders: c.workOrders.filter((w) => w.id !== workOrderId),
-  };
-  putContact(c.email, next);
-  return next;
+  return deleteNestedContactItem(contactEmail, "workOrders", workOrderId);
 }
 
 /** Invoice nested CRUD */
@@ -136,24 +304,103 @@ export function upsertInvoice(
   contactEmail: string,
   invoice: ContactData["invoices"][number],
 ): ContactData | undefined {
-  const c = getContact(contactEmail);
-  if (!c) return undefined;
-  const rest = c.invoices.filter((i) => i.id !== invoice.id);
-  const next = { ...c, invoices: [...rest, invoice] };
-  putContact(c.email, next);
-  return next;
+  return upsertNestedContactItem(contactEmail, "invoices", invoice);
+}
+
+export function getInvoice(
+  contactEmail: string,
+  invoiceId: string,
+): ContactData["invoices"][number] | undefined {
+  return getNestedContactItem(contactEmail, "invoices", invoiceId);
 }
 
 export function deleteInvoice(
   contactEmail: string,
   invoiceId: string,
 ): ContactData | undefined {
+  return deleteNestedContactItem(contactEmail, "invoices", invoiceId);
+}
+
+/** Custom list rows (Admin-defined lists); each row has a unique `id`. */
+export function appendCustomListRow(
+  contactEmail: string,
+  listId: string,
+  row: CustomListRow,
+): ContactData | undefined {
   const c = getContact(contactEmail);
   if (!c) return undefined;
-  const next = {
-    ...c,
-    invoices: c.invoices.filter((i) => i.id !== invoiceId),
-  };
+  const lists = { ...(c.customLists ?? {}) };
+  lists[listId] = [...(lists[listId] ?? []), row];
+  const next = { ...c, customLists: lists };
+  putContact(c.email, next);
+  return next;
+}
+
+export function appendTimelineEvent(
+  contactEmail: string,
+  event: TimelineEvent,
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const next = { ...c, timeline: [...c.timeline, event] };
+  putContact(c.email, next);
+  return next;
+}
+
+export function getTimelineEventByIndex(
+  contactEmail: string,
+  index: number,
+): TimelineEvent | undefined {
+  const c = getContact(contactEmail);
+  if (!c || !Number.isInteger(index) || index < 0 || index >= c.timeline.length) {
+    return undefined;
+  }
+  return c.timeline[index];
+}
+
+export function getCustomListRow(
+  contactEmail: string,
+  listId: string,
+  index: number,
+): CustomListRow | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const rows = c.customLists?.[listId];
+  if (!rows || index < 0 || index >= rows.length) return undefined;
+  return rows[index];
+}
+
+export function replaceCustomListRowAtIndex(
+  contactEmail: string,
+  listId: string,
+  index: number,
+  row: CustomListRow,
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const lists = { ...(c.customLists ?? {}) };
+  const rows = [...(lists[listId] ?? [])];
+  if (index < 0 || index >= rows.length) return undefined;
+  rows[index] = row;
+  lists[listId] = rows;
+  const next = { ...c, customLists: lists };
+  putContact(c.email, next);
+  return next;
+}
+
+export function deleteCustomListRowAtIndex(
+  contactEmail: string,
+  listId: string,
+  index: number,
+): ContactData | undefined {
+  const c = getContact(contactEmail);
+  if (!c) return undefined;
+  const lists = { ...(c.customLists ?? {}) };
+  const rows = [...(lists[listId] ?? [])];
+  if (index < 0 || index >= rows.length) return undefined;
+  rows.splice(index, 1);
+  lists[listId] = rows;
+  const next = { ...c, customLists: lists };
   putContact(c.email, next);
   return next;
 }

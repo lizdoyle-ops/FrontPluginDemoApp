@@ -1,3 +1,4 @@
+import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
 import { getMockContact } from "@/data/mockData";
 import type { ContactData } from "@/types/contact";
 
@@ -7,7 +8,7 @@ export async function fetchContactData(
   try {
     const res = await fetch(
       `/api/contacts/${encodeURIComponent(email)}`,
-      { cache: "no-store" },
+      { cache: "no-store", headers: demoApiAuthHeaders() },
     );
     if (res.ok) {
       return (await res.json()) as ContactData;

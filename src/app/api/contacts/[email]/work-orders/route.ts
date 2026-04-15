@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
 import { workOrderSchema } from "@/lib/api/contactSchemas";
 import { getContact, upsertWorkOrder } from "@/server/demoStore";
 
@@ -16,6 +17,8 @@ export async function POST(
   request: Request,
   context: { params: Promise<RouteParams> },
 ) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
   const json = await request.json();

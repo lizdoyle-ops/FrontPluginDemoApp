@@ -1,4 +1,5 @@
 import type { ContactData } from "@/types/contact";
+import { emptyCover, emptyPolicyholder } from "@/types/insurance";
 
 export const MOCK_CONTACTS: Record<string, ContactData> = {
   "leyton@finalproduction.club": {
@@ -61,6 +62,28 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         priority: "low",
       },
     ],
+    opportunities: [
+      {
+        id: "opp1",
+        title: "Q2 location bundle upsell",
+        stage: "negotiation",
+        amount: 24000,
+        currency: "GBP",
+        expectedCloseDate: "2026-04-30",
+        notes: "Follow up after site visit",
+      },
+    ],
+    orders: [
+      {
+        id: "ord1",
+        title: "Equipment hire — Q1 shoot",
+        status: "processing",
+        orderedAt: "2026-03-20",
+        total: 1850,
+        currency: "GBP",
+        notes: "Camera package + grip",
+      },
+    ],
     workOrders: [
       {
         id: "wo1",
@@ -90,19 +113,16 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
     ],
     timeline: [
       {
-        id: "t1",
         type: "inquiry",
         title: "Initial availability request",
         date: "2026-03-10T09:00:00Z",
       },
       {
-        id: "t2",
         type: "quote",
         title: "Location package sent",
         date: "2026-03-11T14:30:00Z",
       },
       {
-        id: "t3",
         type: "reservation",
         title: "Holding deposit received",
         date: "2026-03-14T11:00:00Z",
@@ -152,6 +172,81 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         vendorName: "ClimateCare Services",
       },
     ],
+    pets: [
+      {
+        id: "pet-hugo",
+        name: "Hugo",
+        species: "Dog",
+        breed: "Labrador Retriever",
+        dob: "2017-11-03",
+        age: 8,
+        gender: "male",
+        neutered: true,
+        microchip: "985112004567891",
+        preExistingConditions: [
+          {
+            condition: "Mild hip dysplasia",
+            notedDate: "2022-06-10",
+            status: "Managed",
+            excludedFromCover: true,
+          },
+        ],
+      },
+    ],
+    policies: [
+      {
+        id: "pol-mp",
+        policyNumber: "MP-55209",
+        product: "Complete",
+        status: "Active",
+        startDate: "2019-03-14",
+        renewalDate: "2026-03-14",
+        annualPremium: 748,
+        paymentFrequency: "Monthly",
+        monthlyDirectDebit: 62.33,
+        paymentStatus: "Up to date",
+      },
+    ],
+    policyholder: {
+      name: "Tom Fielding",
+      dob: "1981-07-22",
+      email: "tom.fielding@gmail.com",
+      phone: "07603 774 219",
+      address: "14 Birchwood Close, Bristol, BS6 7TN",
+      authorisedContacts: ["Tom Fielding"],
+    },
+    cover: {
+      vetFeeLimit: 8000,
+      vetFeeLimitType: "Annual",
+      remainingLimitThisYear: 8000,
+      excess: {
+        fixed: 99,
+        coInsurance: "20% co-pay applies for pets aged 8 and over",
+      },
+      complementaryTreatment: 1000,
+      dental: 1000,
+      thirdPartyLiability: 1000000,
+      exclusions: [
+        "Hip dysplasia and related musculoskeletal conditions (pre-existing)",
+        "Elective procedures",
+        "Routine vaccinations and preventive treatments",
+      ],
+    },
+    claimsHistory: [
+      {
+        id: "CLM-2024-003812",
+        claimId: "CLM-2024-003812",
+        dateSubmitted: "2024-08-19",
+        condition: "Ear infection",
+        vet: "Clifton Vets, Bristol",
+        amountClaimed: 312,
+        amountPaid: 171.8,
+        excessApplied: 99,
+        coInsuranceApplied: 41.2,
+        status: "Paid",
+      },
+    ],
+    customLists: {},
   },
 
   "sarah@zestymedia.club": {
@@ -204,6 +299,27 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         openedAt: "2026-02-10",
       },
     ],
+    opportunities: [
+      {
+        id: "opp2",
+        title: "2026 bulk booking renewal",
+        stage: "proposal",
+        amount: 96000,
+        currency: "GBP",
+        expectedCloseDate: "2026-04-30",
+      },
+    ],
+    orders: [
+      {
+        id: "ord2",
+        title: "Catering — March corporate week",
+        status: "fulfilled",
+        orderedAt: "2026-03-01",
+        total: 4200,
+        currency: "GBP",
+        fulfilledAt: "2026-03-05",
+      },
+    ],
     workOrders: [
       {
         id: "wo3",
@@ -225,14 +341,12 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
     ],
     timeline: [
       {
-        id: "t4",
         type: "contract",
         title: "Framework expired",
         date: "2025-12-31T00:00:00Z",
         detail: "Pending renewal quote",
       },
       {
-        id: "t5",
         type: "quote",
         title: "Renewal quote drafted",
         date: "2026-03-09T10:00:00Z",
@@ -256,6 +370,29 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         dueDate: "2026-04-05",
       },
     ],
+    pets: [],
+    policies: [
+      {
+        id: "pol2",
+        policyNumber: "ZRP-PL-992",
+        product: "Public liability — events",
+        status: "Active",
+        startDate: "2025-01-01",
+        renewalDate: "2025-12-31",
+        annualPremium: 4200,
+        paymentFrequency: "Annual",
+        monthlyDirectDebit: 0,
+        paymentStatus: "Renewal in progress",
+      },
+    ],
+    policyholder: {
+      ...emptyPolicyholder(),
+      name: "Sarah Martinez",
+      email: "sarah@zestymedia.club",
+    },
+    cover: emptyCover(),
+    claimsHistory: [],
+    customLists: {},
   },
 
   "elias@auditlawyer.club": {
@@ -303,6 +440,27 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         priority: "medium",
       },
     ],
+    opportunities: [
+      {
+        id: "opp3",
+        title: "Second site — Bristol expansion",
+        stage: "qualified",
+        amount: 18600,
+        currency: "GBP",
+        expectedCloseDate: "2026-05-15",
+        notes: "Partner approved budget range",
+      },
+    ],
+    orders: [
+      {
+        id: "ord3",
+        title: "Office fit-out supplies",
+        status: "confirmed",
+        orderedAt: "2026-03-28",
+        total: 890,
+        currency: "GBP",
+      },
+    ],
     workOrders: [
       {
         id: "wo4",
@@ -331,7 +489,6 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
     ],
     timeline: [
       {
-        id: "t6",
         type: "payment",
         title: "Q1 retainer received",
         date: "2026-03-01T08:00:00Z",
@@ -361,6 +518,41 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         status: "draft",
       },
     ],
+    pets: [
+      {
+        id: "pet2",
+        name: "Bruno",
+        species: "Dog",
+        breed: "Labrador",
+        preExistingConditions: [],
+        authorisedContacts: "Elias Omorin; concierge desk",
+      },
+    ],
+    policies: [
+      {
+        id: "pol3",
+        policyNumber: "LSP-44102",
+        product: "Executive apartment rental cover",
+        status: "Active",
+        startDate: "2025-09-01",
+        renewalDate: "2026-09-01",
+        annualPremium: 890,
+        paymentFrequency: "Monthly",
+        monthlyDirectDebit: 74.17,
+        paymentStatus: "Up to date",
+      },
+    ],
+    policyholder: {
+      ...emptyPolicyholder(),
+      name: "Elias Omorin",
+      email: "elias@auditlawyer.club",
+      phone: "+44 20 7946 0958",
+      address: "The Chambers, 88 Legal Row, London EC2A 4NE",
+      authorisedContacts: ["Elias Omorin"],
+    },
+    cover: emptyCover(),
+    claimsHistory: [],
+    customLists: {},
   },
 };
 

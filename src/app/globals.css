@@ -14,4 +14,5 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 13px;
   line-height: 1.45;
+  min-height: 100dvh;
 }

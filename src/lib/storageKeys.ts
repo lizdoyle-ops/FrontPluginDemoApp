@@ -6,7 +6,8 @@ export const STORAGE_KEYS = {
   logoUrl: "demo-logo-url",
   visibleSections: "demo-visible-sections",
   sectionOrder: "dashboard-section-order",
-  customContactFields: "demo-custom-contact-fields",
-  caseOverrides: "demo-case-overrides",
+  customObjectDefinitions: "demo-custom-object-definitions",
+  customObjectOrder: "demo-custom-object-order",
+  visibleCustomObjects: "demo-visible-custom-objects",
   stateTimestamp: "dashboard-state-timestamp",
 } as const;

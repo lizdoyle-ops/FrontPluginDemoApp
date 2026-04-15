@@ -3,9 +3,15 @@ info:
   title: Property CRM Demo API
   version: 1.0.0
   description: |
-    Demo REST API for the Property Management Front plugin. No authentication in development;
-    add auth before production use.
+    Demo REST API for the Property Management Front plugin.
+    Send header `Authorization: Bearer <token>` (see Back Office View → API docs tab at `/crm?tab=api`; env `NEXT_PUBLIC_DEMO_API_TOKEN`).
+
+    **Single records (per contact email):** For each nested object type (properties, quotes, cases, inquiries, contracts, attachments, work orders, invoices, pets, policies, claims),
+    use **GET** `.../{id}` to read one record and **POST** `.../{id}` (or **PUT**) with a JSON body to create or replace that id.
+    Collection **POST** `.../cases` (etc.) also upserts by `id` in the body. **Policyholder** and **cover** are singletons: **GET**/**PUT** on `.../policyholder` and `.../cover` only. Timeline events use **index** instead of id (see `/timeline/{index}`).
 servers:
+  - url: https://front-plugin-demo-app.vercel.app
+    description: Production (Vercel)
   - url: http://localhost:3000
     description: Local Next.js dev
 paths:
@@ -31,6 +37,19 @@ paths:
                     type: array
                     items:
                       type: object
+    post:
+      summary: Create a new contact (409 if email exists)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactData"
+      responses:
+        "201":
+          description: Created contact
+        "409":
+          description: Contact already exists
   /api/contacts/{email}:
     parameters:
       - name: email
@@ -95,6 +114,26 @@ paths:
         "404":
           description: Contact not found
   /api/contacts/{email}/work-orders/{id}:
+    get:
+      summary: Get one work order by id
+      responses:
+        "200":
+          description: Work order
+        "404":
+          description: Contact or work order not found
+    post:
+      summary: Create or upsert work order (path id)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkOrder"
+      responses:
+        "201":
+          description: Updated contact with work orders
+        "404":
+          description: Contact not found
     put:
       summary: Upsert work order with path id
       requestBody:
@@ -124,8 +163,43 @@ paths:
         "201":
           description: Updated contact
   /api/contacts/{email}/invoices/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one invoice by id
+      responses:
+        "200":
+          description: Invoice JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invoice"
+        "404":
+          description: Contact or invoice not found
+    post:
+      summary: Create or upsert invoice; path id merged into body (201)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Invoice"
+      responses:
+        "201":
+          description: Updated contact
+        "400":
+          description: Validation error
+        "404":
+          description: Contact not found
     put:
-      summary: Upsert invoice
+      summary: Upsert invoice (200)
       requestBody:
         required: true
         content:
@@ -135,13 +209,1127 @@ paths:
       responses:
         "200":
           description: Updated contact
+        "400":
+          description: Validation error
+        "404":
+          description: Contact not found
     delete:
       summary: Remove invoice
       responses:
         "200":
           description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/opportunities:
+    post:
+      summary: Create or upsert opportunity (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Opportunity"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/opportunities/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one opportunity by id
+      responses:
+        "200":
+          description: Opportunity JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opportunity"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert opportunity; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Opportunity"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert opportunity (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Opportunity"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove opportunity
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/orders:
+    post:
+      summary: Create or upsert order (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/orders/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one order by id
+      responses:
+        "200":
+          description: Order JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert order; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert order (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove order
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/cases:
+    post:
+      summary: Create or upsert support case (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Case"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/cases/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+        description: URL-encoded email
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Case record id (e.g. c1)
+    get:
+      summary: Get one support case by id
+      responses:
+        "200":
+          description: Case JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+        "404":
+          description: Contact or case not found
+    post:
+      summary: Create or upsert case; path id is merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Case"
+      responses:
+        "201":
+          description: Updated full contact
+        "400":
+          description: Validation error
+        "404":
+          description: Contact not found
+    put:
+      summary: Upsert case (same as POST; returns 200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Case"
+      responses:
+        "200":
+          description: Updated full contact
+        "400":
+          description: Validation error
+        "404":
+          description: Contact not found
+    delete:
+      summary: Remove case from contact
+      responses:
+        "200":
+          description: Updated full contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/properties:
+    post:
+      summary: Create or upsert property (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Property"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/properties/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one property by id
+      responses:
+        "200":
+          description: Property JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert property; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Property"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert property (returns 200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Property"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove property
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/quotes:
+    post:
+      summary: Create or upsert quote (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Quote"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/quotes/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one quote by id
+      responses:
+        "200":
+          description: Quote JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert quote; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Quote"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert quote (returns 200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Quote"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove quote
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/inquiries:
+    post:
+      summary: Create or upsert inquiry (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Inquiry"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/inquiries/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one inquiry by id
+      responses:
+        "200":
+          description: Inquiry JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inquiry"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert inquiry; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Inquiry"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert inquiry (returns 200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Inquiry"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove inquiry
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/contracts:
+    post:
+      summary: Create or upsert contract (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contract"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/contracts/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one contract by id
+      responses:
+        "200":
+          description: Contract JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contract"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert contract; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contract"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert contract (returns 200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contract"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove contract
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/timeline:
+    post:
+      summary: Append a timeline event (no id; events are not individually keyed)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimelineEvent"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/timeline/{index}:
+    get:
+      summary: Get one timeline event by zero-based index in the contact timeline array
+      parameters:
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: Timeline event with index
+        "404":
+          description: Not found
+  /api/contacts/{email}/attachments:
+    post:
+      summary: Create or upsert attachment (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Attachment"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/attachments/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one attachment by id
+      responses:
+        "200":
+          description: Attachment JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert attachment; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Attachment"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert attachment (returns 200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Attachment"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove attachment
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/pets:
+    post:
+      summary: Create or upsert pet (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/pets/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one pet by id
+      responses:
+        "200":
+          description: Pet JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert pet; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert pet (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove pet
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/policies:
+    post:
+      summary: Create or upsert policy (id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRecord"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/policies/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one policy by id
+      responses:
+        "200":
+          description: Policy JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyRecord"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert policy; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRecord"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert policy (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRecord"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove policy
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/policyholder:
+    get:
+      summary: Get policyholder (single object per contact)
+      responses:
+        "200":
+          description: Policyholder JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policyholder"
+        "404":
+          description: Contact not found
+    put:
+      summary: Replace policyholder; returns full contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Policyholder"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/cover:
+    get:
+      summary: Get cover (limits, excess, exclusions)
+      responses:
+        "200":
+          description: Cover JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cover"
+        "404":
+          description: Contact not found
+    put:
+      summary: Replace cover; returns full contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cover"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/claims:
+    post:
+      summary: Create or upsert claim (id in body; use claimId for display)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimHistoryItem"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/claims/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one claim by id
+      responses:
+        "200":
+          description: Claim JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimHistoryItem"
+        "404":
+          description: Not found
+    post:
+      summary: Upsert claim; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimHistoryItem"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert claim (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimHistoryItem"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove claim
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/custom-lists/{listId}/rows:
+    post:
+      summary: Append a row to a custom list (Admin object id as listId)
+      parameters:
+        - name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Custom object definition id (e.g. obj-123)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomListRow"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/custom-lists/{listId}/rows/{index}:
+    get:
+      summary: Fetch one custom list row by zero-based index
+      parameters:
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: Row payload with listId, index, and row
+        "404":
+          description: Not found
+    put:
+      summary: Replace custom list row at index
+      parameters:
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomListRow"
+      responses:
+        "200":
+          description: Updated contact
+        "400":
+          description: Validation error
+        "404":
+          description: Contact or row not found
+    delete:
+      summary: Remove custom list row at index
+      parameters:
+        - name: index
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        "200":
+          description: Updated contact
+        "404":
+          description: Contact or row not found
 components:
   schemas:
+    Opportunity:
+      type: object
+      required: [id, title, stage]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        stage:
+          type: string
+          enum:
+            - prospecting
+            - qualified
+            - proposal
+            - negotiation
+            - won
+            - lost
+        amount: { type: number }
+        currency: { type: string }
+        expectedCloseDate: { type: string }
+        notes: { type: string }
+    Order:
+      type: object
+      required: [id, title, status, orderedAt, total, currency]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - processing
+            - fulfilled
+            - cancelled
+        orderedAt: { type: string }
+        total: { type: number }
+        currency: { type: string }
+        fulfilledAt: { type: string }
+        notes: { type: string }
+    Case:
+      type: object
+      required: [id, subject, status, openedAt]
+      properties:
+        id: { type: string }
+        subject: { type: string }
+        status:
+          type: string
+          enum: [open, in_progress, resolved]
+        openedAt: { type: string }
+        priority:
+          type: string
+          enum: [low, medium, high]
+    Property:
+      type: object
+      required: [id, address, city, postcode, status]
+      properties:
+        id: { type: string }
+        address: { type: string }
+        city: { type: string }
+        postcode: { type: string }
+        status:
+          type: string
+          enum: [active, pending, completed]
+        rentMonthly: { type: number }
+        notes: { type: string }
+    Quote:
+      type: object
+      required: [id, title, amount, currency, status]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        amount: { type: number }
+        currency: { type: string }
+        status:
+          type: string
+          enum: [pending, accepted, expired]
+        validUntil: { type: string }
+    Inquiry:
+      type: object
+      required: [id, subject, date, channel]
+      properties:
+        id: { type: string }
+        subject: { type: string }
+        date: { type: string }
+        channel: { type: string }
+    Contract:
+      type: object
+      required: [id, title, type, status, startDate]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        type:
+          type: string
+          enum: [lease, service, vendor, corporate]
+        status:
+          type: string
+          enum: [active, expired, pending_renewal]
+        startDate: { type: string }
+        endDate: { type: string }
+    TimelineEvent:
+      type: object
+      required: [type, title, date]
+      properties:
+        type:
+          type: string
+          enum: [inquiry, quote, reservation, note, contract, payment]
+        title: { type: string }
+        date: { type: string }
+        detail: { type: string }
+    Attachment:
+      type: object
+      required: [id, name, category, uploadedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        url: { type: string }
+        uploadedAt: { type: string }
+    PetPreExistingCondition:
+      type: object
+      required: [condition, notedDate, status, excludedFromCover]
+      properties:
+        condition: { type: string }
+        notedDate: { type: string }
+        status: { type: string }
+        excludedFromCover: { type: boolean }
+    Pet:
+      type: object
+      required: [id, name, species]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        species: { type: string }
+        breed: { type: string }
+        dob: { type: string }
+        age: { type: number }
+        gender:
+          type: string
+          enum: [male, female, unknown]
+        neutered: { type: boolean }
+        microchip: { type: string }
+        preExistingConditions:
+          type: array
+          items: { $ref: "#/components/schemas/PetPreExistingCondition" }
+        authorisedContacts: { type: string }
+        notes: { type: string }
+    PolicyRecord:
+      type: object
+      required:
+        - id
+        - policyNumber
+        - product
+        - status
+        - startDate
+        - renewalDate
+        - annualPremium
+        - paymentFrequency
+        - monthlyDirectDebit
+        - paymentStatus
+      properties:
+        id: { type: string }
+        policyNumber: { type: string }
+        product: { type: string }
+        status: { type: string }
+        startDate: { type: string }
+        renewalDate: { type: string }
+        annualPremium: { type: number }
+        paymentFrequency: { type: string }
+        monthlyDirectDebit: { type: number }
+        paymentStatus: { type: string }
+    Policyholder:
+      type: object
+      required: [name, dob, email, phone, address, authorisedContacts]
+      properties:
+        name: { type: string }
+        dob: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        address: { type: string }
+        authorisedContacts:
+          type: array
+          items: { type: string }
+    CoverExcess:
+      type: object
+      required: [fixed, coInsurance]
+      properties:
+        fixed: { type: number }
+        coInsurance: { type: string }
+    Cover:
+      type: object
+      required:
+        - vetFeeLimit
+        - vetFeeLimitType
+        - remainingLimitThisYear
+        - excess
+        - complementaryTreatment
+        - dental
+        - thirdPartyLiability
+        - exclusions
+      properties:
+        vetFeeLimit: { type: number }
+        vetFeeLimitType: { type: string }
+        remainingLimitThisYear: { type: number }
+        excess: { $ref: "#/components/schemas/CoverExcess" }
+        complementaryTreatment: { type: number }
+        dental: { type: number }
+        thirdPartyLiability: { type: number }
+        exclusions:
+          type: array
+          items: { type: string }
+    ClaimHistoryItem:
+      type: object
+      required:
+        - id
+        - claimId
+        - dateSubmitted
+        - condition
+        - vet
+        - amountClaimed
+        - amountPaid
+        - excessApplied
+        - coInsuranceApplied
+        - status
+      properties:
+        id: { type: string }
+        claimId: { type: string }
+        dateSubmitted: { type: string }
+        condition: { type: string }
+        vet: { type: string }
+        amountClaimed: { type: number }
+        amountPaid: { type: number }
+        excessApplied: { type: number }
+        coInsuranceApplied: { type: number }
+        status: { type: string }
+    CustomListRow:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          description: Stable unique id for this row
+      additionalProperties:
+        type: string
+      description: Unique id plus map of admin-defined field keys to string values
     WorkOrder:
       type: object
       required: [id, title, type, status]
@@ -179,12 +1367,19 @@ components:
         - tags
         - properties
         - quotes
+        - opportunities
+        - orders
         - inquiries
         - cases
         - workOrders
         - contracts
         - timeline
         - attachments
+        - pets
+        - policies
+        - policyholder
+        - cover
+        - claimsHistory
         - invoices
       properties:
         email: { type: string, format: email }
@@ -197,28 +1392,47 @@ components:
           items: { type: string }
         properties:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/Property" }
         quotes:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/Quote" }
+        opportunities:
+          type: array
+          items: { $ref: "#/components/schemas/Opportunity" }
+        orders:
+          type: array
+          items: { $ref: "#/components/schemas/Order" }
         inquiries:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/Inquiry" }
         cases:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/Case" }
         workOrders:
           type: array
           items: { $ref: "#/components/schemas/WorkOrder" }
         contracts:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/Contract" }
         timeline:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/TimelineEvent" }
         attachments:
           type: array
-          items: { type: object }
+          items: { $ref: "#/components/schemas/Attachment" }
+        pets:
+          type: array
+          items: { $ref: "#/components/schemas/Pet" }
+        policies:
+          type: array
+          items: { $ref: "#/components/schemas/PolicyRecord" }
+        policyholder:
+          $ref: "#/components/schemas/Policyholder"
+        cover:
+          $ref: "#/components/schemas/Cover"
+        claimsHistory:
+          type: array
+          items: { $ref: "#/components/schemas/ClaimHistoryItem" }
         invoices:
           type: array
           items: { $ref: "#/components/schemas/Invoice" }

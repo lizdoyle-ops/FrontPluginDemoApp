@@ -1,4 +1,5 @@
 import type { Attachment } from "@/types/contact";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 export function AttachmentsSection({ items }: { items: Attachment[] }) {
   if (!items?.length) {
@@ -9,9 +10,14 @@ export function AttachmentsSection({ items }: { items: Attachment[] }) {
       {items.map((a) => (
         <li
           key={a.id}
-          className="flex items-center justify-between gap-2 rounded-md border border-zinc-100 px-2 py-1.5"
+          className="flex flex-col gap-1 rounded-md border border-zinc-100 px-2 py-1.5 sm:flex-row sm:items-center sm:justify-between"
         >
-          <span className="truncate font-medium text-zinc-800">{a.name}</span>
+          <div className="min-w-0 flex-1">
+            <RecordIdLine id={a.id} />
+            <span className="block truncate font-medium text-zinc-800">
+              {a.name}
+            </span>
+          </div>
           <span className="shrink-0 text-[11px] text-zinc-500">{a.category}</span>
         </li>
       ))}

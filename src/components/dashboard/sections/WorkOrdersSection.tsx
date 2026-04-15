@@ -1,5 +1,6 @@
 import type { WorkOrder } from "@/types/contact";
 import { Badge } from "@/components/ui/Badge";
+import { RecordIdLine } from "@/components/ui/RecordIdLine";
 
 const statusVariant: Record<
   WorkOrder["status"],
@@ -23,6 +24,7 @@ export function WorkOrdersSection({ items }: { items: WorkOrder[] }) {
         >
           <div className="flex items-start justify-between gap-2">
             <div>
+              <RecordIdLine id={w.id} />
               <div className="font-medium text-zinc-900">{w.title}</div>
               <div className="text-[11px] text-zinc-500 capitalize">
                 {w.type.replace("_", " ")}

@@ -38,6 +38,42 @@ export interface Case {
   priority?: "low" | "medium" | "high";
 }
 
+export type OpportunityStage =
+  | "prospecting"
+  | "qualified"
+  | "proposal"
+  | "negotiation"
+  | "won"
+  | "lost";
+
+export interface Opportunity {
+  id: string;
+  title: string;
+  stage: OpportunityStage;
+  amount?: number;
+  currency?: string;
+  expectedCloseDate?: string;
+  notes?: string;
+}
+
+export type OrderStatus =
+  | "pending"
+  | "confirmed"
+  | "processing"
+  | "fulfilled"
+  | "cancelled";
+
+export interface Order {
+  id: string;
+  title: string;
+  status: OrderStatus;
+  orderedAt: string;
+  total: number;
+  currency: string;
+  fulfilledAt?: string;
+  notes?: string;
+}
+
 export type WorkOrderType =
   | "maintenance"
   | "repair"
@@ -100,8 +136,8 @@ export type TimelineEventType =
   | "contract"
   | "payment";
 
+/** Timeline entries are not keyed by id (order / date only). */
 export interface TimelineEvent {
-  id: string;
   type: TimelineEventType;
   title: string;
   date: string;
@@ -116,6 +152,28 @@ export interface Attachment {
   uploadedAt: string;
 }
 
+import type {
+  ClaimHistoryItem,
+  Cover,
+  Pet,
+  Policy,
+  Policyholder,
+} from "./insurance";
+
+export type {
+  ClaimHistoryItem,
+  Cover,
+  CoverExcess,
+  Pet,
+  PetGender,
+  PetPreExistingCondition,
+  Policy,
+  Policyholder,
+} from "./insurance";
+
+/** Custom list row: stable unique id plus string field values (admin-defined keys). */
+export type CustomListRow = { id: string } & Record<string, string>;
+
 export interface ContactData {
   email: string;
   name: string;
@@ -127,29 +185,47 @@ export interface ContactData {
   quotes: Quote[];
   inquiries: Inquiry[];
   cases: Case[];
+  opportunities: Opportunity[];
+  orders: Order[];
   workOrders: WorkOrder[];
   contracts: Contract[];
   timeline: TimelineEvent[];
   attachments: Attachment[];
+  pets: Pet[];
+  policies: Policy[];
+  policyholder: Policyholder;
+  cover: Cover;
+  claimsHistory: ClaimHistoryItem[];
   invoices: Invoice[];
+  /** Rows for user-defined object types (Admin centre); keyed by CustomObjectDefinition.id */
+  customLists?: Record<string, CustomListRow[]>;
 }
 
-export interface CustomContactField {
+/** Configurable list object shown on the plugin dashboard (admin-defined fields). */
+export interface CustomObjectDefinition {
   id: string;
-  label: string;
-  value: string;
-  icon: string;
+  title: string;
+  /** Column keys / field ids for each row */
+  fieldKeys: string[];
 }
 
 export const SECTION_IDS = [
   "properties",
   "quotes",
+  "inquiries",
+  "opportunities",
+  "orders",
   "cases",
   "workOrders",
   "contracts",
   "invoices",
   "timeline",
   "attachments",
+  "pets",
+  "policies",
+  "policyholder",
+  "cover",
+  "claimsHistory",
 ] as const;
 
 export type SectionId = (typeof SECTION_IDS)[number];

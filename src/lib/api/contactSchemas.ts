@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const propertySchema = z.object({
+export const propertySchema = z.object({
   id: z.string(),
   address: z.string(),
   city: z.string(),
@@ -10,7 +10,7 @@ const propertySchema = z.object({
   notes: z.string().optional(),
 });
 
-const quoteSchema = z.object({
+export const quoteSchema = z.object({
   id: z.string(),
   title: z.string(),
   amount: z.number(),
@@ -19,19 +19,53 @@ const quoteSchema = z.object({
   validUntil: z.string().optional(),
 });
 
-const inquirySchema = z.object({
+export const inquirySchema = z.object({
   id: z.string(),
   subject: z.string(),
   date: z.string(),
   channel: z.string(),
 });
 
-const caseSchema = z.object({
+export const caseSchema = z.object({
   id: z.string(),
   subject: z.string(),
   status: z.enum(["open", "in_progress", "resolved"]),
   openedAt: z.string(),
   priority: z.enum(["low", "medium", "high"]).optional(),
+});
+
+export const opportunitySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  stage: z.enum([
+    "prospecting",
+    "qualified",
+    "proposal",
+    "negotiation",
+    "won",
+    "lost",
+  ]),
+  amount: z.number().optional(),
+  currency: z.string().optional(),
+  expectedCloseDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const orderSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  status: z.enum([
+    "pending",
+    "confirmed",
+    "processing",
+    "fulfilled",
+    "cancelled",
+  ]),
+  orderedAt: z.string(),
+  total: z.number(),
+  currency: z.string(),
+  fulfilledAt: z.string().optional(),
+  notes: z.string().optional(),
 });
 
 export const workOrderSchema = z.object({
@@ -43,7 +77,7 @@ export const workOrderSchema = z.object({
   propertyId: z.string().optional(),
 });
 
-const contractSchema = z.object({
+export const contractSchema = z.object({
   id: z.string(),
   title: z.string(),
   type: z.enum(["lease", "service", "vendor", "corporate"]),
@@ -68,8 +102,7 @@ export const invoiceSchema = z.object({
   vendorName: z.string().optional(),
 });
 
-const timelineSchema = z.object({
-  id: z.string(),
+export const timelineSchema = z.object({
   type: z.enum([
     "inquiry",
     "quote",
@@ -83,13 +116,100 @@ const timelineSchema = z.object({
   detail: z.string().optional(),
 });
 
-const attachmentSchema = z.object({
+export const attachmentSchema = z.object({
   id: z.string(),
   name: z.string(),
   category: z.string(),
   url: z.string().optional(),
   uploadedAt: z.string(),
 });
+
+export const petPreExistingConditionSchema = z.object({
+  condition: z.string(),
+  notedDate: z.string(),
+  status: z.string(),
+  excludedFromCover: z.boolean(),
+});
+
+export const petSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  species: z.string(),
+  breed: z.string().optional(),
+  dob: z.string().optional(),
+  age: z.number().optional(),
+  gender: z.enum(["male", "female", "unknown"]).optional(),
+  neutered: z.boolean().optional(),
+  microchip: z.string().optional(),
+  preExistingConditions: z.array(petPreExistingConditionSchema).default([]),
+  authorisedContacts: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const policySchema = z.object({
+  id: z.string(),
+  policyNumber: z.string(),
+  product: z.string(),
+  status: z.string(),
+  startDate: z.string(),
+  renewalDate: z.string(),
+  annualPremium: z.number(),
+  paymentFrequency: z.string(),
+  monthlyDirectDebit: z.number(),
+  paymentStatus: z.string(),
+});
+
+export const policyholderSchema = z.object({
+  name: z.string(),
+  dob: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  address: z.string(),
+  authorisedContacts: z.array(z.string()),
+});
+
+export const coverExcessSchema = z.object({
+  fixed: z.number(),
+  coInsurance: z.string(),
+});
+
+export const coverSchema = z.object({
+  vetFeeLimit: z.number(),
+  vetFeeLimitType: z.string(),
+  remainingLimitThisYear: z.number(),
+  excess: coverExcessSchema,
+  complementaryTreatment: z.number(),
+  dental: z.number(),
+  thirdPartyLiability: z.number(),
+  exclusions: z.array(z.string()),
+});
+
+export const claimHistoryItemSchema = z.object({
+  id: z.string(),
+  claimId: z.string(),
+  dateSubmitted: z.string(),
+  condition: z.string(),
+  vet: z.string(),
+  amountClaimed: z.number(),
+  amountPaid: z.number(),
+  excessApplied: z.number(),
+  coInsuranceApplied: z.number(),
+  status: z.string(),
+});
+
+/** String map with required unique `id`; server fills `id` if omitted or empty. */
+export const customListRowSchema = z
+  .record(z.string(), z.string())
+  .transform((row) => {
+    const id = row.id?.trim();
+    if (id) return { ...row, id };
+    return {
+      ...row,
+      id: `clr-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+    };
+  });
+
+const stringRow = customListRowSchema;
 
 export const contactDataSchema = z.object({
   email: z.string().email(),
@@ -102,11 +222,19 @@ export const contactDataSchema = z.object({
   quotes: z.array(quoteSchema),
   inquiries: z.array(inquirySchema),
   cases: z.array(caseSchema),
+  opportunities: z.array(opportunitySchema),
+  orders: z.array(orderSchema),
   workOrders: z.array(workOrderSchema),
   contracts: z.array(contractSchema),
   timeline: z.array(timelineSchema),
   attachments: z.array(attachmentSchema),
+  pets: z.array(petSchema),
+  policies: z.array(policySchema),
+  policyholder: policyholderSchema,
+  cover: coverSchema,
+  claimsHistory: z.array(claimHistoryItemSchema),
   invoices: z.array(invoiceSchema),
+  customLists: z.record(z.string(), z.array(stringRow)).optional(),
 });
 
 export const contactPatchSchema = contactDataSchema.partial();

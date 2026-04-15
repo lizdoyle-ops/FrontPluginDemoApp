@@ -12,6 +12,7 @@ import {
   extractEmailsFromMessages,
   normalizeMessageList,
 } from "@/lib/front/contactDetection";
+import { pickReplyMessageId } from "@/lib/front/pickReplyMessageId";
 import { fetchContactData } from "@/lib/front/fetchContact";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
 import type { ContactData } from "@/types/contact";
@@ -19,7 +20,12 @@ import { MOCK_CONTACTS } from "@/data/mockData";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "ready"; contact: ContactData }
+  | {
+      status: "ready";
+      contact: ContactData;
+      /** Front message id for reply drafts; absent outside Front or `?demo=` mode. */
+      replyToMessageId: string | null;
+    }
   | { status: "no_contact" }
   | { status: "error"; message: string };
 
@@ -52,18 +58,27 @@ export function DashboardPage() {
     if (demo) {
       const c = await fetchContactData(demo);
       if (c) {
-        setState({ status: "ready", contact: c });
+        setState({
+          status: "ready",
+          contact: c,
+          replyToMessageId: null,
+        });
         return;
       }
     }
 
     try {
       const messages = await collectMessages();
+      const replyToMessageId = pickReplyMessageId(messages) ?? null;
       const emails = extractEmailsFromMessages(messages);
       for (const email of emails) {
         const c = await fetchContactData(email);
         if (c) {
-          setState({ status: "ready", contact: c });
+          setState({
+            status: "ready",
+            contact: c,
+            replyToMessageId,
+          });
           return;
         }
       }
@@ -92,7 +107,7 @@ export function DashboardPage() {
 
   if (state.status === "loading") {
     return (
-      <div className="p-4 text-center text-[13px] text-zinc-500">
+      <div className="p-4 text-center text-[13px] text-zinc-500 sm:p-5 lg:px-6">
         Loading conversation…
       </div>
     );
@@ -100,13 +115,15 @@ export function DashboardPage() {
 
   if (state.status === "error") {
     return (
-      <div className="p-4 text-[13px] text-red-700">{state.message}</div>
+      <div className="p-4 text-[13px] text-red-700 sm:p-5 lg:px-6">
+        {state.message}
+      </div>
     );
   }
 
   if (state.status === "no_contact") {
     return (
-      <div className="space-y-3 p-4 text-[13px] text-zinc-600">
+      <div className="space-y-3 p-4 text-[13px] text-zinc-600 sm:p-5 lg:max-w-2xl lg:px-6">
         <p>No matching property contact for this conversation.</p>
         <p className="text-[12px] text-zinc-500">
           Demo emails: {demoKeys}
@@ -123,13 +140,17 @@ export function DashboardPage() {
   return (
     <ContactDashboard
       contact={state.contact}
+      replyToMessageId={state.replyToMessageId}
       sectionOrder={config.sectionOrder}
       visibleSections={config.visibleSections}
-      customContactFields={config.customContactFields}
       companyName={config.companyName}
       brandColor={config.brandColor}
       secondaryColor={config.secondaryColor}
-      caseOverridesRaw={config.caseOverridesRaw}
+      logoUrl={config.logoUrl}
+      appTitle={config.appTitle}
+      customObjectDefinitions={config.customObjectDefinitions}
+      customObjectOrder={config.customObjectOrder}
+      visibleCustomObjects={config.visibleCustomObjects}
     />
   );
 }
