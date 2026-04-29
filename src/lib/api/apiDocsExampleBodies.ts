@@ -35,11 +35,11 @@ const EXAMPLE_JSON_BY_METHOD_PATH: Record<string, string> = {
   "PUT|/api/contacts/{email}/invoices/{id}":
     '{"reference":"INV-DEMO","amount":150,"currency":"GBP","status":"paid"}',
   "POST|/api/contacts/{email}/quotes":
-    '{"id":"q-demo","title":"Quote","amount":500,"currency":"GBP","status":"pending"}',
+    '{"id":"q-demo","referenceNumber":"#RE-1604-08501","productName":"Alpine ski week","supplier":"Demo Travel Co","requestedDatesPeriod":"12–19 Jan 2027","startingFromPerPerson":899,"numberOfParticipants":4,"rooms":"2× twin","lastName":"Chen","firstName":"Leyton","address":"42 Elm Street, Manchester","phone":"+44 7700 900123","email":"leyton@finalproduction.club","messageNotes":"Late arrival on day 1","participants":[{"firstName":"Leyton","lastName":"Chen","category":"adult"},{"firstName":"River","lastName":"Chen","category":"child"}],"title":"Location package Q1","amount":500,"currency":"GBP","status":"pending"}',
   "POST|/api/contacts/{email}/quotes/{id}":
-    '{"id":"q-demo","title":"Quote","amount":500,"currency":"GBP","status":"pending"}',
+    '{"id":"q-demo","referenceNumber":"#RE-1604-08501","productName":"Alpine ski week","supplier":"Demo Travel Co","requestedDatesPeriod":"12–19 Jan 2027","startingFromPerPerson":899,"numberOfParticipants":4,"rooms":"2× twin","lastName":"Chen","firstName":"Leyton","address":"42 Elm Street, Manchester","phone":"+44 7700 900123","email":"leyton@finalproduction.club","messageNotes":"Late arrival on day 1","participants":[{"firstName":"Leyton","lastName":"Chen","category":"adult"},{"firstName":"River","lastName":"Chen","category":"child"}],"title":"Location package Q1","amount":500,"currency":"GBP","status":"pending"}',
   "PUT|/api/contacts/{email}/quotes/{id}":
-    '{"title":"Quote","amount":550,"currency":"GBP","status":"accepted"}',
+    '{"title":"Location package Q1","amount":550,"currency":"GBP","status":"accepted","referenceNumber":"#RE-1604-08501","productName":"Alpine ski week"}',
   "POST|/api/contacts/{email}/opportunities":
     '{"id":"opp-demo","title":"Pipeline deal","stage":"prospecting"}',
   "POST|/api/contacts/{email}/opportunities/{id}":

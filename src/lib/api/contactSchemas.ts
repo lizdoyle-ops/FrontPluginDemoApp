@@ -10,6 +10,12 @@ export const propertySchema = z.object({
   notes: z.string().optional(),
 });
 
+export const quoteParticipantSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  category: z.enum(["adult", "child", "baby"]),
+});
+
 export const quoteSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -17,6 +23,20 @@ export const quoteSchema = z.object({
   currency: z.string(),
   status: z.enum(["pending", "accepted", "expired"]),
   validUntil: z.string().optional(),
+  productName: z.string().optional(),
+  supplier: z.string().optional(),
+  requestedDatesPeriod: z.string().optional(),
+  startingFromPerPerson: z.number().optional(),
+  numberOfParticipants: z.number().optional(),
+  rooms: z.string().optional(),
+  lastName: z.string().optional(),
+  firstName: z.string().optional(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  messageNotes: z.string().optional(),
+  participants: z.array(quoteParticipantSchema).optional(),
+  referenceNumber: z.string().optional(),
 });
 
 export const inquirySchema = z.object({

@@ -1151,6 +1151,15 @@ components:
           enum: [active, pending, completed]
         rentMonthly: { type: number }
         notes: { type: string }
+    QuoteParticipant:
+      type: object
+      required: [firstName, lastName, category]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        category:
+          type: string
+          enum: [adult, child, baby]
     Quote:
       type: object
       required: [id, title, amount, currency, status]
@@ -1163,6 +1172,22 @@ components:
           type: string
           enum: [pending, accepted, expired]
         validUntil: { type: string }
+        productName: { type: string }
+        supplier: { type: string }
+        requestedDatesPeriod: { type: string }
+        startingFromPerPerson: { type: number }
+        numberOfParticipants: { type: integer }
+        rooms: { type: string }
+        lastName: { type: string }
+        firstName: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        messageNotes: { type: string }
+        participants:
+          type: array
+          items: { $ref: "#/components/schemas/QuoteParticipant" }
+        referenceNumber: { type: string }
     Inquiry:
       type: object
       required: [id, subject, date, channel]

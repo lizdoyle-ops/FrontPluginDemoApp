@@ -620,7 +620,7 @@ export function AdminCentre({
               const ok = cfg.saveToStorage();
               notify(
                 ok
-                  ? "Admin settings saved to this browser."
+                  ? "Admin settings saved to this browser (cloud sync runs when POSTGRES_URL is set)."
                   : "Could not save (storage blocked, private mode, or full).",
               );
             }}
@@ -631,12 +631,14 @@ export function AdminCentre({
           <button
             type="button"
             onClick={() => {
-              const ok = cfg.hydrate();
-              notify(
-                ok
-                  ? "Reverted to last saved settings in this browser."
-                  : "Could not read saved settings from this browser.",
-              );
+              void (async () => {
+                const ok = await cfg.hydrate();
+                notify(
+                  ok
+                    ? "Restored from cloud when available, otherwise last saved settings in this browser."
+                    : "Could not read saved settings from this browser.",
+                );
+              })();
             }}
             className="rounded-lg border border-zinc-200 px-4 py-2.5 text-[13px] font-medium text-zinc-700 hover:bg-zinc-50"
           >
@@ -644,9 +646,9 @@ export function AdminCentre({
           </button>
         </div>
         <p className="text-[11px] text-zinc-500">
-          Edits update the page right away; these buttons write or reload from
-          local storage so they survive refresh. You should see a confirmation
-          message when they succeed.
+          Edits update the page right away; save writes this browser and syncs
+          to Postgres when configured. Revert reloads from the server first,
+          then local storage.
         </p>
       </div>
     </div>

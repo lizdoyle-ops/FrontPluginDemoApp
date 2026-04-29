@@ -49,7 +49,7 @@ export default async function WorkOrderViewPage({
     /* use raw */
   }
 
-  const contact = getContact(email);
+  const contact = await getContact(email);
   if (!contact) {
     return (
       <main className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">
@@ -59,7 +59,7 @@ export default async function WorkOrderViewPage({
     );
   }
 
-  const workOrder = getWorkOrder(contact.email, id);
+  const workOrder = await getWorkOrder(contact.email, id);
   if (!workOrder) {
     return (
       <main className="mx-auto max-w-lg px-4 py-16 text-center sm:px-6">

@@ -35,10 +35,10 @@ export async function GET(
   const { email: raw, id: rawId } = await context.params;
   const email = decodeEmail(raw);
   const id = decodeId(rawId);
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const workOrder = getWorkOrder(email, id);
+  const workOrder = await getWorkOrder(email, id);
   if (!workOrder) {
     return NextResponse.json({ error: "Work order not found" }, { status: 404 });
   }
@@ -62,10 +62,10 @@ export async function POST(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = upsertWorkOrder(email, parsed.data);
+  const updated = await upsertWorkOrder(email, parsed.data);
   return NextResponse.json(updated, { status: 201 });
 }
 
@@ -86,10 +86,10 @@ export async function PUT(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = upsertWorkOrder(email, parsed.data);
+  const updated = await upsertWorkOrder(email, parsed.data);
   return NextResponse.json(updated);
 }
 
@@ -102,9 +102,9 @@ export async function DELETE(
   const { email: raw, id: rawId } = await context.params;
   const email = decodeEmail(raw);
   const id = decodeId(rawId);
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = deleteWorkOrder(email, id);
+  const updated = await deleteWorkOrder(email, id);
   return NextResponse.json(updated);
 }

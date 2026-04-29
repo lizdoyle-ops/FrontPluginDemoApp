@@ -56,10 +56,10 @@ export function generateEmailTemplate(
       contact.quotes
         .map(
           (q) =>
-            `<tr>${td(escapeHtml(q.title))}${td(money(q.currency, q.amount), "white-space:nowrap;")}${td(escapeHtml(q.status))}${td(escapeHtml(q.validUntil ?? "—"))}</tr>`,
+            `<tr>${td(escapeHtml(q.referenceNumber ?? "—"))}${td(escapeHtml(q.productName ?? "—"))}${td(escapeHtml(q.title))}${td(money(q.currency, q.amount), "white-space:nowrap;")}${td(escapeHtml(q.status))}${td(escapeHtml(q.validUntil ?? "—"))}</tr>`,
         )
         .join("")
-    : `<tr><td colspan="4" style="padding:12px 6px;color:#71717a;font-size:13px;">No quotes.</td></tr>`;
+    : `<tr><td colspan="6" style="padding:12px 6px;color:#71717a;font-size:13px;">No quotes.</td></tr>`;
 
   const oppRows =
     contact.opportunities?.length ?
@@ -189,7 +189,7 @@ export function generateEmailTemplate(
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Address", secondaryColor)}${th("Location", secondaryColor)}${th("Status", secondaryColor)}${th("Rent/mo", secondaryColor)}</tr>${propsRows}</table>
 
   <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Quotes</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Title", secondaryColor)}${th("Amount", secondaryColor)}${th("Status", secondaryColor)}${th("Valid until", secondaryColor)}</tr>${quotesRows}</table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Ref", secondaryColor)}${th("Product", secondaryColor)}${th("Title", secondaryColor)}${th("Amount", secondaryColor)}${th("Status", secondaryColor)}${th("Valid until", secondaryColor)}</tr>${quotesRows}</table>
 
   <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Opportunities</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Title", secondaryColor)}${th("Stage", secondaryColor)}${th("Amount", secondaryColor)}${th("Close", secondaryColor)}</tr>${oppRows}</table>

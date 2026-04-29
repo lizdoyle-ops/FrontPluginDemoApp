@@ -37,13 +37,40 @@ Example with the default demo token (replace if you set `NEXT_PUBLIC_DEMO_API_TO
 
 Anyone with that URL can view the work order while the token is valid—treat it like a credential.
 
-**Persistence:** The in-memory store is seeded from mock contacts. If the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored).
+**Persistence:** The demo store is seeded from mock contacts. **Without `POSTGRES_URL`:** if the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored). **With `POSTGRES_URL`:** each contact is stored as one JSON document in table **`demo_contacts`** (`email` primary key, `payload` = full `ContactData` including nested arrays and `customLists`). Mock seeds still apply for emails with no DB row until you overwrite or delete them.
 
 ### CRM workspace (browser UI)
 
 Full-screen desk at **`/crm`** (also linked from the plugin hamburger as **CRM — full workspace**). It uses the same Bearer token as the API (`NEXT_PUBLIC_DEMO_API_TOKEN` is available to the browser) to list accounts, edit nested records, and create contacts. Changes apply to the **same store** the Front sidebar reads when a conversation email matches.
 
 On **Vercel**, the filesystem is ephemeral: persistence across deploys is not guaranteed unless you add external storage.
+
+## Admin config (Postgres / Supabase)
+
+CRM **Admin centre** settings (branding, section order, custom object definitions) can be stored in Postgres instead of only the browser.
+
+1. Create the table (once): run `db/migrations/001_demo_admin_config.sql` in the Supabase SQL Editor, or rely on the app’s first request (it runs `CREATE TABLE IF NOT EXISTS`).
+2. Set **`POSTGRES_URL`** (or **`POSTGRES_PRISMA_URL`**) on **Vercel** (and optionally `.env.local` for dev) to your Supabase **database connection URI** (server-side string from **Project Settings → Database**).
+3. Redeploy. Same **`Authorization: Bearer`** token as the rest of the API.
+
+**Endpoints**
+
+| Method | Path | Notes |
+|--------|------|--------|
+| `GET` | `/api/demo-admin-config` | Returns `{ "payload": null }` if no row yet; otherwise `{ "payload": { ... } }` matching the Zod shape in `src/lib/api/demoAdminConfigPayloadSchema.ts`. **503** if no Postgres URL is configured or the DB errors. |
+| `PUT` | `/api/demo-admin-config` | Body `{ "payload": { ... } }` (full snapshot). Upserts row `id = "global"` in table **`demo_admin_config`**. **503** if DB unavailable. |
+
+**Smoke test** (after `BASE` and `H` are set as above):
+
+```bash
+curl -sS -H "$H" "$BASE/api/demo-admin-config"
+```
+
+Expect **200** and `payload` JSON or `null`. The in-app **Save admin settings** button writes local storage then **PUT**s this snapshot in the background when the payload validates.
+
+### Contact CRM data (`demo_contacts`)
+
+Same **`POSTGRES_URL`** as above. Migration: `db/migrations/002_demo_contacts.sql` (optional; the app creates the table on first use). All `/api/contacts` reads and writes go through Postgres when configured; the OpenAPI/Zod `ContactData` shape is the JSON stored in **`payload`**.
 
 ## List contacts
 

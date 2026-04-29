@@ -56,10 +56,10 @@ export async function PUT(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = upsertInvoice(email, parsed.data);
+  const updated = await upsertInvoice(email, parsed.data);
   return NextResponse.json(updated);
 }
 
@@ -71,9 +71,9 @@ export async function DELETE(
   if (denied) return denied;
   const { email: raw, id } = await context.params;
   const email = decodeEmail(raw);
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = deleteInvoice(email, id);
+  const updated = await deleteInvoice(email, id);
   return NextResponse.json(updated);
 }

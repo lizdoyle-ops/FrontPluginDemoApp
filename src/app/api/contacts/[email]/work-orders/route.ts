@@ -29,9 +29,9 @@ export async function POST(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = upsertWorkOrder(email, parsed.data);
+  const updated = await upsertWorkOrder(email, parsed.data);
   return NextResponse.json(updated, { status: 201 });
 }

@@ -14,7 +14,7 @@ export async function GET(
   if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmailParam(raw);
-  const c = getContact(email);
+  const c = await getContact(email);
   if (!c) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
@@ -29,7 +29,7 @@ export async function PUT(
   if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmailParam(raw);
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
   let json: unknown;
@@ -45,6 +45,6 @@ export async function PUT(
       { status: 400 },
     );
   }
-  patchContact(email, { cover: parsed.data });
-  return NextResponse.json(getContact(email));
+  await patchContact(email, { cover: parsed.data });
+  return NextResponse.json(await getContact(email));
 }

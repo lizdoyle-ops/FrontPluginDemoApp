@@ -12,6 +12,14 @@ export interface Property {
 
 export type QuoteStatus = "pending" | "accepted" | "expired";
 
+export type QuoteParticipantCategory = "adult" | "child" | "baby";
+
+export interface QuoteParticipant {
+  firstName: string;
+  lastName: string;
+  category: QuoteParticipantCategory;
+}
+
 export interface Quote {
   id: string;
   title: string;
@@ -19,6 +27,26 @@ export interface Quote {
   currency: string;
   status: QuoteStatus;
   validUntil?: string;
+  /** Product / package name (template field). */
+  productName?: string;
+  supplier?: string;
+  /** Requested travel or service dates / period (free text). */
+  requestedDatesPeriod?: string;
+  /** Advertised or quoted “from” price per person. */
+  startingFromPerPerson?: number;
+  numberOfParticipants?: number;
+  /** Room types or allocation (free text). */
+  rooms?: string;
+  /** Client details as shown on the quote form. */
+  lastName?: string;
+  firstName?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  messageNotes?: string;
+  participants?: QuoteParticipant[];
+  /** External reference e.g. #RE-1604-08501 */
+  referenceNumber?: string;
 }
 
 export interface Inquiry {

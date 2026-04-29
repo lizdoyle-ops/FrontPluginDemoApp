@@ -27,7 +27,10 @@ import { ApiDocsClient } from "@/components/api-docs/ApiDocsClient";
 import { AdminCentre } from "@/components/crm/AdminCentre";
 import { CustomListsEditor } from "@/components/crm/CustomListsEditor";
 import { RecordIdLine } from "@/components/ui/RecordIdLine";
-import { petPreExistingConditionSchema } from "@/lib/api/contactSchemas";
+import {
+  petPreExistingConditionSchema,
+  quoteParticipantSchema,
+} from "@/lib/api/contactSchemas";
 import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
 import { getDemoApiToken } from "@/lib/demoApiToken";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
@@ -39,6 +42,17 @@ const jsonAuth = (): HeadersInit => ({
   ...demoApiAuthHeaders(),
   "Content-Type": "application/json",
 });
+
+function parseQuoteParticipantsJson(raw: string) {
+  const s = raw.trim();
+  if (!s) return undefined;
+  try {
+    const parsed = z.array(quoteParticipantSchema).safeParse(JSON.parse(s));
+    return parsed.success ? parsed.data : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 type TabId =
   | "account"
@@ -860,6 +874,8 @@ export function CrmHomeClient() {
           contact.quotes as unknown as Record<string, unknown>[],
           [
             { key: "id", label: "ID" },
+            { key: "referenceNumber", label: "Ref" },
+            { key: "productName", label: "Product" },
             { key: "title", label: "Title" },
             { key: "amount", label: "Amount" },
             { key: "status", label: "Status" },
@@ -871,6 +887,25 @@ export function CrmHomeClient() {
               index: i,
               draft: {
                 id: String(row.id ?? ""),
+                referenceNumber: String(row.referenceNumber ?? ""),
+                productName: String(row.productName ?? ""),
+                supplier: String(row.supplier ?? ""),
+                requestedDatesPeriod: String(row.requestedDatesPeriod ?? ""),
+                startingFromPerPerson: String(
+                  row.startingFromPerPerson ?? "",
+                ),
+                numberOfParticipants: String(row.numberOfParticipants ?? ""),
+                rooms: String(row.rooms ?? ""),
+                lastName: String(row.lastName ?? ""),
+                firstName: String(row.firstName ?? ""),
+                address: String(row.address ?? ""),
+                phone: String(row.phone ?? ""),
+                email: String(row.email ?? ""),
+                messageNotes: String(row.messageNotes ?? ""),
+                participantsJson:
+                  Array.isArray(row.participants) && row.participants.length ?
+                    JSON.stringify(row.participants, null, 2)
+                  : "",
                 title: String(row.title ?? ""),
                 amount: String(row.amount ?? ""),
                 currency: String(row.currency ?? "GBP"),
@@ -889,6 +924,20 @@ export function CrmHomeClient() {
               recordKey: "quote",
               draft: {
                 id: `q-${Date.now()}`,
+                referenceNumber: "",
+                productName: "",
+                supplier: "",
+                requestedDatesPeriod: "",
+                startingFromPerPerson: "",
+                numberOfParticipants: "",
+                rooms: "",
+                lastName: "",
+                firstName: "",
+                address: "",
+                phone: "",
+                email: "",
+                messageNotes: "",
+                participantsJson: "",
                 title: "",
                 amount: "0",
                 currency: "GBP",
@@ -1471,13 +1520,35 @@ export function CrmHomeClient() {
       return;
     }
     if (recordKey === "quote") {
-      const q = {
+      const trim = (v: unknown) => String(v ?? "").trim();
+      const opt = (s: string) => (s ? s : undefined);
+      const numOpt = (s: string) => {
+        const n = Number(s);
+        return Number.isFinite(n) ? n : undefined;
+      };
+      const q: ContactData["quotes"][number] = {
         id: draft.id,
         title: draft.title,
         amount: Number(draft.amount) || 0,
         currency: draft.currency,
         status: draft.status as "pending" | "accepted" | "expired",
-        validUntil: draft.validUntil || undefined,
+        validUntil: opt(trim(draft.validUntil)),
+        referenceNumber: opt(trim(draft.referenceNumber)),
+        productName: opt(trim(draft.productName)),
+        supplier: opt(trim(draft.supplier)),
+        requestedDatesPeriod: opt(trim(draft.requestedDatesPeriod)),
+        startingFromPerPerson: numOpt(trim(draft.startingFromPerPerson)),
+        numberOfParticipants: numOpt(trim(draft.numberOfParticipants)),
+        rooms: opt(trim(draft.rooms)),
+        lastName: opt(trim(draft.lastName)),
+        firstName: opt(trim(draft.firstName)),
+        address: opt(trim(draft.address)),
+        phone: opt(trim(draft.phone)),
+        email: opt(trim(draft.email)),
+        messageNotes: opt(trim(draft.messageNotes)),
+        participants: parseQuoteParticipantsJson(
+          String(draft.participantsJson ?? ""),
+        ),
       };
       const list = [...contact.quotes];
       if (index !== undefined) list[index] = q;
@@ -2001,6 +2072,249 @@ export function CrmHomeClient() {
                   setModal({
                     ...modal,
                     draft: { ...d, category: e.target.value },
+                  })
+                }
+              />
+            </Field>
+          </>
+        );
+      case "quote":
+        return (
+          <>
+            <Field label="ID">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Reference number">
+              <input
+                className={inputClass()}
+                value={d.referenceNumber}
+                placeholder="e.g. #RE-1604-08501"
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, referenceNumber: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Product name">
+              <input
+                className={inputClass()}
+                value={d.productName}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, productName: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Supplier">
+              <input
+                className={inputClass()}
+                value={d.supplier}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, supplier: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Requested dates / period">
+              <input
+                className={inputClass()}
+                value={d.requestedDatesPeriod}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, requestedDatesPeriod: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Starting from (per person)">
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass()}
+                  value={d.startingFromPerPerson}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, startingFromPerPerson: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Number of participants">
+                <input
+                  type="number"
+                  className={inputClass()}
+                  value={d.numberOfParticipants}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, numberOfParticipants: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Room(s)">
+              <input
+                className={inputClass()}
+                value={d.rooms}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, rooms: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Client first name">
+                <input
+                  className={inputClass()}
+                  value={d.firstName}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, firstName: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Client last name">
+                <input
+                  className={inputClass()}
+                  value={d.lastName}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, lastName: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Client address">
+              <input
+                className={inputClass()}
+                value={d.address}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, address: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Client phone">
+                <input
+                  className={inputClass()}
+                  value={d.phone}
+                  onChange={(e) =>
+                    setModal({ ...modal, draft: { ...d, phone: e.target.value } })
+                  }
+                />
+              </Field>
+              <Field label="Client email">
+                <input
+                  className={inputClass()}
+                  value={d.email}
+                  onChange={(e) =>
+                    setModal({ ...modal, draft: { ...d, email: e.target.value } })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Message / notes">
+              <textarea
+                className={`${inputClass()} min-h-[72px]`}
+                value={d.messageNotes}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, messageNotes: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Participants (JSON array)">
+              <textarea
+                className={`${inputClass()} min-h-[120px] font-mono text-[11px]`}
+                placeholder='[{"firstName":"Ada","lastName":"Lovelace","category":"adult"}]'
+                value={d.participantsJson}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, participantsJson: e.target.value },
+                  })
+                }
+              />
+            </Field>
+            <Field label="Title (internal / summary)">
+              <input
+                className={inputClass()}
+                value={d.title}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, title: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Amount">
+                <input
+                  type="number"
+                  className={inputClass()}
+                  value={d.amount}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, amount: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Currency">
+                <input
+                  className={inputClass()}
+                  value={d.currency}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, currency: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <Field label="Status">
+              <select
+                className={inputClass()}
+                value={d.status}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, status: e.target.value } })
+                }
+              >
+                <option value="pending">Pending</option>
+                <option value="accepted">Accepted</option>
+                <option value="expired">Expired</option>
+              </select>
+            </Field>
+            <Field label="Valid until">
+              <input
+                className={inputClass()}
+                value={d.validUntil}
+                onChange={(e) =>
+                  setModal({
+                    ...modal,
+                    draft: { ...d, validUntil: e.target.value },
                   })
                 }
               />

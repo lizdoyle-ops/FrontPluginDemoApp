@@ -26,7 +26,7 @@ export async function GET(
   if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
-  const contact = getContact(email);
+  const contact = await getContact(email);
   if (!contact) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -49,8 +49,8 @@ export async function PUT(
       { status: 400 },
     );
   }
-  putContact(email, parsed.data);
-  return NextResponse.json(getContact(parsed.data.email));
+  await putContact(email, parsed.data);
+  return NextResponse.json(await getContact(parsed.data.email));
 }
 
 export async function PATCH(
@@ -69,7 +69,7 @@ export async function PATCH(
       { status: 400 },
     );
   }
-  const updated = patchContact(email, parsed.data);
+  const updated = await patchContact(email, parsed.data);
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -84,7 +84,7 @@ export async function DELETE(
   if (denied) return denied;
   const { email: raw } = await context.params;
   const email = decodeEmail(raw);
-  const ok = deleteContact(email);
+  const ok = await deleteContact(email);
   if (!ok) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

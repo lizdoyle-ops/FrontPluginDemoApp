@@ -8,8 +8,14 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { applyBrandCssVars } from "@/lib/theme";
+import { demoAdminConfigPayloadSchema } from "@/lib/api/demoAdminConfigPayloadSchema";
+import { demoApiAuthHeaders } from "@/lib/api/demoFetchHeaders";
+import {
+  applyDemoAdminPayloadToState,
+  mirrorDemoAdminPayloadToLocalStorage,
+} from "@/lib/demoAdminConfigApply";
 import { STORAGE_KEYS } from "@/lib/storageKeys";
+import { applyBrandCssVars } from "@/lib/theme";
 import type { CustomObjectDefinition, SectionId } from "@/types/contact";
 import { DEFAULT_SECTION_ORDER, SECTION_IDS } from "@/types/contact";
 
@@ -76,9 +82,52 @@ function useDemoConfigState() {
     Record<string, boolean>
   >({});
 
-  const hydrate = useCallback((): boolean => {
+  const hydrate = useCallback(async (): Promise<boolean> => {
     if (typeof window === "undefined") return false;
+    const setters = {
+      setAppTitle,
+      setCompanyName,
+      setBrandColor,
+      setSecondaryColor,
+      setLogoUrl,
+      setSectionOrder,
+      setVisibleSections,
+      setCustomObjectDefinitions,
+      setCustomObjectOrder,
+      setVisibleCustomObjects,
+    };
     try {
+      const cloud = await fetch("/api/demo-admin-config", {
+        headers: demoApiAuthHeaders(),
+      });
+      if (cloud.ok) {
+        const body: unknown = await cloud.json();
+        const rawPayload =
+          body &&
+          typeof body === "object" &&
+          "payload" in body &&
+          (body as { payload: unknown }).payload;
+        if (rawPayload && typeof rawPayload === "object") {
+          const parsed = demoAdminConfigPayloadSchema.safeParse(rawPayload);
+          if (parsed.success) {
+            const mergedOrder = applyDemoAdminPayloadToState(
+              parsed.data,
+              setters,
+            );
+            mirrorDemoAdminPayloadToLocalStorage({
+              ...parsed.data,
+              sectionOrder: mergedOrder,
+            });
+            window.dispatchEvent(
+              new CustomEvent(SECTION_ORDER_EVENT, {
+                detail: { order: mergedOrder },
+              }),
+            );
+            return true;
+          }
+        }
+      }
+
       migrateStaleSectionOrder();
       setAppTitle(
         localStorage.getItem(STORAGE_KEYS.appTitle) ??
@@ -218,6 +267,28 @@ function useDemoConfigState() {
         window.dispatchEvent(
           new CustomEvent(SECTION_ORDER_EVENT, { detail: { order: so } }),
         );
+        const snap = demoAdminConfigPayloadSchema.safeParse({
+          appTitle: a,
+          companyName: co,
+          brandColor: bc,
+          secondaryColor: sc,
+          logoUrl: lu,
+          sectionOrder: so,
+          visibleSections: vs,
+          customObjectDefinitions: cod,
+          customObjectOrder: coo,
+          visibleCustomObjects: vco,
+        });
+        if (snap.success) {
+          void fetch("/api/demo-admin-config", {
+            method: "PUT",
+            headers: {
+              ...demoApiAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ payload: snap.data }),
+          }).catch(() => {});
+        }
         return true;
       } catch (e) {
         console.error("demo config save failed", e);

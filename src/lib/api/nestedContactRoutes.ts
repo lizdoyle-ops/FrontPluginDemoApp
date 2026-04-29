@@ -55,10 +55,10 @@ export async function postNestedCollectionItem<K extends NestedIdCollectionKey>(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = upsertNestedContactItem(
+  const updated = await upsertNestedContactItem(
     email,
     field,
     parsed.data as ContactData[K][number],
@@ -87,10 +87,10 @@ export async function postTimelineEvent(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = appendTimelineEvent(email, parsed.data);
+  const updated = await appendTimelineEvent(email, parsed.data);
   return NextResponse.json(updated, { status: 201 });
 }
 
@@ -105,10 +105,10 @@ export async function getNestedItemById<K extends NestedIdCollectionKey>(
   if (denied) return denied;
   const email = decodeEmailParam(emailRaw);
   const id = decodeIdParam(idRaw);
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const item = getNestedContactItem(email, field, id);
+  const item = await getNestedContactItem(email, field, id);
   if (!item) {
     return NextResponse.json(
       { error: `${notFoundLabel} not found` },
@@ -148,10 +148,10 @@ export async function upsertNestedItemByPathId<K extends NestedIdCollectionKey>(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = upsertNestedContactItem(
+  const updated = await upsertNestedContactItem(
     email,
     field,
     parsed.data as ContactData[K][number],
@@ -169,10 +169,10 @@ export async function deleteNestedItemByPathId(
   if (denied) return denied;
   const email = decodeEmailParam(emailRaw);
   const id = decodeIdParam(idRaw);
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = deleteNestedContactItem(email, field, id);
+  const updated = await deleteNestedContactItem(email, field, id);
   return NextResponse.json(updated);
 }
 
@@ -188,10 +188,10 @@ export async function getTimelineItemByIndex(
   if (!Number.isFinite(index) || !Number.isInteger(index) || index < 0) {
     return NextResponse.json({ error: "Invalid timeline index" }, { status: 400 });
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const item = getTimelineEventByIndex(email, index);
+  const item = await getTimelineEventByIndex(email, index);
   if (!item) {
     return NextResponse.json(
       { error: "Timeline event not found" },
@@ -224,10 +224,10 @@ export async function postCustomListRow(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = appendCustomListRow(email, listId, parsed.data);
+  const updated = await appendCustomListRow(email, listId, parsed.data);
   return NextResponse.json(updated, { status: 201 });
 }
 
@@ -245,10 +245,10 @@ export async function getCustomListRowByIndex(
   if (!Number.isFinite(index) || index < 0) {
     return NextResponse.json({ error: "Invalid row index" }, { status: 400 });
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const row = getCustomListRow(email, listId, index);
+  const row = await getCustomListRow(email, listId, index);
   if (!row) {
     return NextResponse.json({ error: "Row not found" }, { status: 404 });
   }
@@ -283,10 +283,10 @@ export async function putCustomListRowAtIndex(
       { status: 400 },
     );
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = replaceCustomListRowAtIndex(
+  const updated = await replaceCustomListRowAtIndex(
     email,
     listId,
     index,
@@ -312,10 +312,10 @@ export async function deleteCustomListRowAtIndex(
   if (!Number.isFinite(index) || index < 0) {
     return NextResponse.json({ error: "Invalid row index" }, { status: 400 });
   }
-  if (!getContact(email)) {
+  if (!(await getContact(email))) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
-  const updated = removeCustomListRowAtIndex(email, listId, index);
+  const updated = await removeCustomListRowAtIndex(email, listId, index);
   if (!updated) {
     return NextResponse.json({ error: "Row not found" }, { status: 404 });
   }

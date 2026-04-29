@@ -1,6 +1,13 @@
 import fs from "fs";
 import path from "path";
 import { MOCK_CONTACTS } from "@/data/mockData";
+import {
+  pgDeleteContact,
+  pgGetContactPayload,
+  pgListAllContacts,
+  pgUpsertContact,
+} from "@/lib/server/demoContactsPg";
+import { isPostgresConfigured } from "@/lib/server/postgresUrl";
 import type { ContactData, CustomListRow, TimelineEvent } from "@/types/contact";
 import { emptyCover, emptyPolicyholder } from "@/types/insurance";
 import type { Pet, Policy } from "@/types/insurance";
@@ -9,6 +16,9 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "demo-store.json");
 
 type StoreShape = Record<string, ContactData>;
+
+/** When Postgres is on, seeded contacts removed via DELETE stay hidden until restart. */
+const pgHiddenMockEmails = new Set<string>();
 
 function migratePolicy(raw: unknown): Policy {
   const o = raw as Record<string, unknown>;
@@ -153,6 +163,7 @@ function writeFileStore(data: StoreShape) {
 }
 
 export function initDemoStoreFromDisk() {
+  if (isPostgresConfigured()) return;
   const fromDisk = readFileStore();
   const merged = fromDisk
     ? normalizeStoreKeys({ ...MOCK_CONTACTS, ...fromDisk })
@@ -164,55 +175,111 @@ function persist() {
   writeFileStore(memory);
 }
 
-export function getAllContacts(): StoreShape {
-  return { ...memory };
+function getContactFromMemoryOnly(email: string): ContactData | undefined {
+  const key = email.trim().toLowerCase();
+  const direct = memory[key];
+  if (direct) return direct;
+  return Object.values(memory).find((c) => c.email.toLowerCase() === key);
 }
 
-export function listContactSummaries() {
-  return Object.values(memory).map((c) => ({
+function mockContactByKey(emailKey: string): ContactData | undefined {
+  const mock = MOCK_CONTACTS[emailKey];
+  if (mock) return { ...mock };
+  return Object.values(MOCK_CONTACTS).find(
+    (c) => c.email.trim().toLowerCase() === emailKey,
+  );
+}
+
+export async function getAllContacts(): Promise<StoreShape> {
+  if (!isPostgresConfigured()) {
+    return { ...memory };
+  }
+  const dbRows = await pgListAllContacts();
+  const dbRecord: StoreShape = {};
+  for (const c of dbRows) {
+    const n = normalizeContactForStore(c);
+    dbRecord[n.email.trim().toLowerCase()] = n;
+  }
+  const merged = normalizeEntireStore(
+    normalizeStoreKeys({ ...MOCK_CONTACTS, ...dbRecord }),
+  );
+  for (const key of pgHiddenMockEmails) {
+    delete merged[key];
+  }
+  return merged;
+}
+
+export async function listContactSummaries() {
+  const all = await getAllContacts();
+  return Object.values(all).map((c) => ({
     email: c.email,
     name: c.name,
     company: c.company,
   }));
 }
 
-export function getContact(email: string): ContactData | undefined {
+export async function getContact(
+  email: string,
+): Promise<ContactData | undefined> {
   const key = email.trim().toLowerCase();
-  const direct = memory[key];
-  if (direct) return direct;
-  return Object.values(memory).find(
-    (c) => c.email.toLowerCase() === key,
-  );
+  if (!isPostgresConfigured()) {
+    return getContactFromMemoryOnly(email);
+  }
+  if (pgHiddenMockEmails.has(key)) return undefined;
+  const fromDb = await pgGetContactPayload(key);
+  if (fromDb) return normalizeContactForStore(fromDb);
+  const fromMock = mockContactByKey(key);
+  return fromMock ? normalizeContactForStore(fromMock) : undefined;
 }
 
-export function putContact(email: string, data: ContactData) {
-  const key = email.trim().toLowerCase();
-  const prev = memory[key];
-  if (prev && prev.email.toLowerCase() !== data.email.trim().toLowerCase()) {
-    delete memory[key];
-  }
+export async function putContact(email: string, data: ContactData) {
   const newKey = data.email.trim().toLowerCase();
   const normalized = normalizeContactForStore({
     ...data,
     email: data.email.trim(),
   });
+  if (isPostgresConfigured()) {
+    pgHiddenMockEmails.delete(newKey);
+    const prev = await getContact(email);
+    if (prev && prev.email.trim().toLowerCase() !== newKey) {
+      await pgDeleteContact(prev.email.trim().toLowerCase());
+    }
+    await pgUpsertContact(normalized);
+    return;
+  }
+  const key = email.trim().toLowerCase();
+  const prev = memory[key];
+  if (prev && prev.email.toLowerCase() !== newKey) {
+    delete memory[key];
+  }
   memory[newKey] = normalized;
   persist();
 }
 
-export function patchContact(
+export async function patchContact(
   email: string,
   partial: Partial<ContactData>,
-): ContactData | undefined {
-  const existing = getContact(email);
+): Promise<ContactData | undefined> {
+  const existing = await getContact(email);
   if (!existing) return undefined;
   const next = { ...existing, ...partial, email: existing.email };
-  putContact(existing.email, next);
+  await putContact(existing.email, next);
   return next;
 }
 
-export function deleteContact(email: string): boolean {
-  const target = getContact(email);
+export async function deleteContact(email: string): Promise<boolean> {
+  const key = email.trim().toLowerCase();
+  if (isPostgresConfigured()) {
+    const hadRow = await pgDeleteContact(key);
+    if (hadRow) return true;
+    const mock = mockContactByKey(key);
+    if (mock) {
+      pgHiddenMockEmails.add(key);
+      return true;
+    }
+    return false;
+  }
+  const target = getContactFromMemoryOnly(email);
   if (!target) return false;
   delete memory[target.email.toLowerCase()];
   persist();
@@ -235,148 +302,148 @@ export type NestedIdCollectionKey =
   | "claimsHistory"
   | "invoices";
 
-export function upsertNestedContactItem<K extends NestedIdCollectionKey>(
+export async function upsertNestedContactItem<K extends NestedIdCollectionKey>(
   contactEmail: string,
   key: K,
   item: ContactData[K][number],
-): ContactData | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const list = c[key] as { id: string }[];
   const rest = list.filter((x) => x.id !== (item as { id: string }).id);
   const next = { ...c, [key]: [...rest, item] } as ContactData;
-  putContact(c.email, next);
+  await putContact(c.email, next);
   return next;
 }
 
-export function getNestedContactItem<K extends NestedIdCollectionKey>(
+export async function getNestedContactItem<K extends NestedIdCollectionKey>(
   contactEmail: string,
   key: K,
   id: string,
-): ContactData[K][number] | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData[K][number] | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   return (c[key] as { id: string }[]).find((x) => x.id === id) as
     | ContactData[K][number]
     | undefined;
 }
 
-export function deleteNestedContactItem(
+export async function deleteNestedContactItem(
   contactEmail: string,
   key: NestedIdCollectionKey,
   id: string,
-): ContactData | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const list = c[key] as { id: string }[];
   const next = {
     ...c,
     [key]: list.filter((x) => x.id !== id),
   } as ContactData;
-  putContact(c.email, next);
+  await putContact(c.email, next);
   return next;
 }
 
 /** Work order nested CRUD */
-export function upsertWorkOrder(
+export async function upsertWorkOrder(
   contactEmail: string,
   workOrder: ContactData["workOrders"][number],
-): ContactData | undefined {
+): Promise<ContactData | undefined> {
   return upsertNestedContactItem(contactEmail, "workOrders", workOrder);
 }
 
-export function getWorkOrder(
+export async function getWorkOrder(
   contactEmail: string,
   workOrderId: string,
-): ContactData["workOrders"][number] | undefined {
+): Promise<ContactData["workOrders"][number] | undefined> {
   return getNestedContactItem(contactEmail, "workOrders", workOrderId);
 }
 
-export function deleteWorkOrder(
+export async function deleteWorkOrder(
   contactEmail: string,
   workOrderId: string,
-): ContactData | undefined {
+): Promise<ContactData | undefined> {
   return deleteNestedContactItem(contactEmail, "workOrders", workOrderId);
 }
 
 /** Invoice nested CRUD */
-export function upsertInvoice(
+export async function upsertInvoice(
   contactEmail: string,
   invoice: ContactData["invoices"][number],
-): ContactData | undefined {
+): Promise<ContactData | undefined> {
   return upsertNestedContactItem(contactEmail, "invoices", invoice);
 }
 
-export function getInvoice(
+export async function getInvoice(
   contactEmail: string,
   invoiceId: string,
-): ContactData["invoices"][number] | undefined {
+): Promise<ContactData["invoices"][number] | undefined> {
   return getNestedContactItem(contactEmail, "invoices", invoiceId);
 }
 
-export function deleteInvoice(
+export async function deleteInvoice(
   contactEmail: string,
   invoiceId: string,
-): ContactData | undefined {
+): Promise<ContactData | undefined> {
   return deleteNestedContactItem(contactEmail, "invoices", invoiceId);
 }
 
 /** Custom list rows (Admin-defined lists); each row has a unique `id`. */
-export function appendCustomListRow(
+export async function appendCustomListRow(
   contactEmail: string,
   listId: string,
   row: CustomListRow,
-): ContactData | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const lists = { ...(c.customLists ?? {}) };
   lists[listId] = [...(lists[listId] ?? []), row];
   const next = { ...c, customLists: lists };
-  putContact(c.email, next);
+  await putContact(c.email, next);
   return next;
 }
 
-export function appendTimelineEvent(
+export async function appendTimelineEvent(
   contactEmail: string,
   event: TimelineEvent,
-): ContactData | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const next = { ...c, timeline: [...c.timeline, event] };
-  putContact(c.email, next);
+  await putContact(c.email, next);
   return next;
 }
 
-export function getTimelineEventByIndex(
+export async function getTimelineEventByIndex(
   contactEmail: string,
   index: number,
-): TimelineEvent | undefined {
-  const c = getContact(contactEmail);
+): Promise<TimelineEvent | undefined> {
+  const c = await getContact(contactEmail);
   if (!c || !Number.isInteger(index) || index < 0 || index >= c.timeline.length) {
     return undefined;
   }
   return c.timeline[index];
 }
 
-export function getCustomListRow(
+export async function getCustomListRow(
   contactEmail: string,
   listId: string,
   index: number,
-): CustomListRow | undefined {
-  const c = getContact(contactEmail);
+): Promise<CustomListRow | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const rows = c.customLists?.[listId];
   if (!rows || index < 0 || index >= rows.length) return undefined;
   return rows[index];
 }
 
-export function replaceCustomListRowAtIndex(
+export async function replaceCustomListRowAtIndex(
   contactEmail: string,
   listId: string,
   index: number,
   row: CustomListRow,
-): ContactData | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const lists = { ...(c.customLists ?? {}) };
   const rows = [...(lists[listId] ?? [])];
@@ -384,16 +451,16 @@ export function replaceCustomListRowAtIndex(
   rows[index] = row;
   lists[listId] = rows;
   const next = { ...c, customLists: lists };
-  putContact(c.email, next);
+  await putContact(c.email, next);
   return next;
 }
 
-export function deleteCustomListRowAtIndex(
+export async function deleteCustomListRowAtIndex(
   contactEmail: string,
   listId: string,
   index: number,
-): ContactData | undefined {
-  const c = getContact(contactEmail);
+): Promise<ContactData | undefined> {
+  const c = await getContact(contactEmail);
   if (!c) return undefined;
   const lists = { ...(c.customLists ?? {}) };
   const rows = [...(lists[listId] ?? [])];
@@ -401,7 +468,7 @@ export function deleteCustomListRowAtIndex(
   rows.splice(index, 1);
   lists[listId] = rows;
   const next = { ...c, customLists: lists };
-  putContact(c.email, next);
+  await putContact(c.email, next);
   return next;
 }
 

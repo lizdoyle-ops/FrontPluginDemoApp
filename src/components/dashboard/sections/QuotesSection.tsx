@@ -21,7 +21,17 @@ export function QuotesSection({ items }: { items: Quote[] }) {
         >
           <div>
             <RecordIdLine id={q.id} />
-            <div className="font-medium text-zinc-900">{q.title}</div>
+            {q.referenceNumber ? (
+              <div className="text-[11px] font-medium text-zinc-500">
+                {q.referenceNumber}
+              </div>
+            ) : null}
+            <div className="font-medium text-zinc-900">
+              {q.productName ?? q.title}
+            </div>
+            {q.productName && q.title !== q.productName ? (
+              <div className="text-[12px] text-zinc-500">{q.title}</div>
+            ) : null}
             <div className="text-zinc-600">
               {q.currency} {q.amount.toLocaleString()}
             </div>
