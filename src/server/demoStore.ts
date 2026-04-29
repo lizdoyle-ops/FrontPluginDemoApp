@@ -100,6 +100,7 @@ export function normalizeContactForStore(c: ContactData): ContactData {
 
   const opportunities = c.opportunities ?? [];
   const orders = c.orders ?? [];
+  const orderRequests = c.orderRequests ?? [];
   const pets = (c.pets ?? []).map(migratePet);
   const policies = (c.policies ?? []).map(migratePolicy);
   const policyholder = c.policyholder ?? emptyPolicyholder();
@@ -111,6 +112,7 @@ export function normalizeContactForStore(c: ContactData): ContactData {
     customLists,
     opportunities,
     orders,
+    orderRequests,
     pets,
     policies,
     policyholder,
@@ -294,6 +296,7 @@ export type NestedIdCollectionKey =
   | "cases"
   | "opportunities"
   | "orders"
+  | "orderRequests"
   | "workOrders"
   | "contracts"
   | "attachments"

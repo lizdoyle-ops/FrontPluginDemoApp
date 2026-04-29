@@ -13,6 +13,7 @@ import {
   PawPrint,
   ScrollText,
   Shield,
+  Ship,
   ShoppingCart,
   Umbrella,
   UserRound,
@@ -33,6 +34,7 @@ import { InquiriesSection } from "@/components/dashboard/sections/InquiriesSecti
 import { InvoicesSection } from "@/components/dashboard/sections/InvoicesSection";
 import { OpportunitiesSection } from "@/components/dashboard/sections/OpportunitiesSection";
 import { OrdersSection } from "@/components/dashboard/sections/OrdersSection";
+import { OrderRequestsSection } from "@/components/dashboard/sections/OrderRequestsSection";
 import { PetsSection } from "@/components/dashboard/sections/PetsSection";
 import { PoliciesSection } from "@/components/dashboard/sections/PoliciesSection";
 import { PolicyholderSection } from "@/components/dashboard/sections/PolicyholderSection";
@@ -57,6 +59,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
   inquiries: "Inquiries",
   opportunities: "Opportunities",
   orders: "Orders",
+  orderRequests: "Order requests",
   cases: "Support cases",
   workOrders: "Work orders",
   contracts: "Contracts",
@@ -76,6 +79,7 @@ const SECTION_ICONS: Record<SectionId, LucideIcon> = {
   inquiries: Inbox,
   opportunities: TrendingUp,
   orders: ShoppingCart,
+  orderRequests: Ship,
   cases: Headphones,
   workOrders: Wrench,
   contracts: FileSignature,
@@ -196,6 +200,12 @@ export function ContactDashboard({
     orders: {
       count: contact.orders.length,
       node: <OrdersSection items={contact.orders} />,
+    },
+    orderRequests: {
+      count: (contact.orderRequests ?? []).length,
+      node: (
+        <OrderRequestsSection items={contact.orderRequests ?? []} />
+      ),
     },
     cases: {
       count: contact.cases.length,

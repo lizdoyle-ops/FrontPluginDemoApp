@@ -140,7 +140,7 @@ export function ApiDocsClient({
           (URL-encoded in curl); replace with your values as needed.
         </p>
         <p className="mb-2 text-[11px] leading-relaxed text-zinc-500">
-          For cases, properties, quotes, opportunities, orders, inquiries, contracts,
+          For cases, properties, quotes, order requests, opportunities, orders, inquiries, contracts,
           attachments, pets, policies, claims, work orders, and invoices: use{" "}
           <strong>GET …/&#123;id&#125;</strong> to read one item and{" "}
           <strong>POST</strong> or <strong>PUT</strong> <strong>…/&#123;id&#125;</strong> to upsert

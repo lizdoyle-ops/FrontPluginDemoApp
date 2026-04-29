@@ -102,6 +102,23 @@ export interface Order {
   notes?: string;
 }
 
+/** Cargo / charter style inquiry (distinct from e-commerce `Order`). */
+export interface OrderRequest {
+  id: string;
+  /** Headline e.g. "CARGO INQUIRY – INQ-2026-0891" */
+  title: string;
+  broker: string;
+  charterer: string;
+  cargo: string;
+  /** e.g. "3,000mt" */
+  quantity: string;
+  loadPort: string;
+  dischargePort: string;
+  laycan: string;
+  /** e.g. "€85/mt" */
+  rateIdea: string;
+}
+
 export type WorkOrderType =
   | "maintenance"
   | "repair"
@@ -215,6 +232,7 @@ export interface ContactData {
   cases: Case[];
   opportunities: Opportunity[];
   orders: Order[];
+  orderRequests: OrderRequest[];
   workOrders: WorkOrder[];
   contracts: Contract[];
   timeline: TimelineEvent[];
@@ -243,6 +261,7 @@ export const SECTION_IDS = [
   "inquiries",
   "opportunities",
   "orders",
+  "orderRequests",
   "cases",
   "workOrders",
   "contracts",

@@ -53,6 +53,7 @@ const SECTION_LABELS: Record<SectionId, string> = {
   inquiries: "Inquiries",
   opportunities: "Opportunities",
   orders: "Orders",
+  orderRequests: "Order requests",
   cases: "Support cases",
   workOrders: "Work orders",
   contracts: "Contracts",
@@ -395,8 +396,9 @@ export function AdminCentre({
         <p className="text-[12px] text-zinc-500">
           Drag to reorder and choose what appears on the Front plugin contact
           dashboard. Standard lists match every native list in Back Office
-          (properties, quotes, inquiries, opportunities, orders, cases, work
-          orders, contracts, invoices, timeline, attachments, pets, policies,
+          (properties, quotes, inquiries, opportunities, orders, order requests,
+          cases, work orders, contracts, invoices, timeline,
+          attachments, pets, policies,
           policyholder, cover, claims). Custom object sections use the same
           pattern: when <span className="font-medium text-zinc-600">Show</span>{" "}
           is on, that table appears in the plugin. Each custom object also has

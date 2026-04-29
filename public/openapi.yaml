@@ -6,7 +6,7 @@ info:
     Demo REST API for the Property Management Front plugin.
     Send header `Authorization: Bearer <token>` (see Back Office View → API docs tab at `/crm?tab=api`; env `NEXT_PUBLIC_DEMO_API_TOKEN`).
 
-    **Single records (per contact email):** For each nested object type (properties, quotes, cases, inquiries, contracts, attachments, work orders, invoices, pets, policies, claims),
+    **Single records (per contact email):** For each nested object type (properties, quotes, order requests, cases, inquiries, contracts, attachments, work orders, invoices, pets, policies, claims),
     use **GET** `.../{id}` to read one record and **POST** `.../{id}` (or **PUT**) with a JSON body to create or replace that id.
     Collection **POST** `.../cases` (etc.) also upserts by `id` in the body. **Policyholder** and **cover** are singletons: **GET**/**PUT** on `.../policyholder` and `.../cover` only. Timeline events use **index** instead of id (see `/timeline/{index}`).
 servers:
@@ -345,6 +345,70 @@ paths:
         "404": { description: Contact not found }
     delete:
       summary: Remove order
+      responses:
+        "200": { description: Updated contact }
+        "404": { description: Contact not found }
+  /api/contacts/{email}/order-requests:
+    post:
+      summary: Create or upsert order request (cargo inquiry; id in body)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequest"
+      responses:
+        "201":
+          description: Updated contact
+        "404":
+          description: Contact not found
+  /api/contacts/{email}/order-requests/{id}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      summary: Get one order request by id
+      responses:
+        "200":
+          description: Order request JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderRequest"
+        "404":
+          description: Not found
+    post:
+      summary: Create or upsert order request; path id merged into body
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequest"
+      responses:
+        "201": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    put:
+      summary: Upsert order request (200)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequest"
+      responses:
+        "200": { description: Updated contact }
+        "400": { description: Validation error }
+        "404": { description: Contact not found }
+    delete:
+      summary: Remove order request
       responses:
         "200": { description: Updated contact }
         "404": { description: Contact not found }
@@ -1125,6 +1189,30 @@ components:
         currency: { type: string }
         fulfilledAt: { type: string }
         notes: { type: string }
+    OrderRequest:
+      type: object
+      required:
+        - id
+        - title
+        - broker
+        - charterer
+        - cargo
+        - quantity
+        - loadPort
+        - dischargePort
+        - laycan
+        - rateIdea
+      properties:
+        id: { type: string }
+        title: { type: string }
+        broker: { type: string }
+        charterer: { type: string }
+        cargo: { type: string }
+        quantity: { type: string }
+        loadPort: { type: string }
+        dischargePort: { type: string }
+        laycan: { type: string }
+        rateIdea: { type: string }
     Case:
       type: object
       required: [id, subject, status, openedAt]
@@ -1394,6 +1482,7 @@ components:
         - quotes
         - opportunities
         - orders
+        - orderRequests
         - inquiries
         - cases
         - workOrders
@@ -1427,6 +1516,9 @@ components:
         orders:
           type: array
           items: { $ref: "#/components/schemas/Order" }
+        orderRequests:
+          type: array
+          items: { $ref: "#/components/schemas/OrderRequest" }
         inquiries:
           type: array
           items: { $ref: "#/components/schemas/Inquiry" }

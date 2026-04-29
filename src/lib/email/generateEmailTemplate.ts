@@ -84,6 +84,17 @@ export function generateEmailTemplate(
         .join("")
     : `<tr><td colspan="4" style="padding:12px 6px;color:#71717a;font-size:13px;">No orders.</td></tr>`;
 
+  const orList = contact.orderRequests ?? [];
+  const orderRequestRows =
+    orList.length ?
+      orList
+        .map(
+          (r) =>
+            `<tr>${td(escapeHtml(r.title))}${td(escapeHtml(r.cargo))}${td(escapeHtml(`${r.loadPort} → ${r.dischargePort}`))}${td(escapeHtml(r.laycan))}${td(escapeHtml(r.rateIdea))}</tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="5" style="padding:12px 6px;color:#71717a;font-size:13px;">No order requests.</td></tr>`;
+
   const casesRows =
     contact.cases?.length ?
       contact.cases
@@ -196,6 +207,9 @@ export function generateEmailTemplate(
 
   <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Orders</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Title", secondaryColor)}${th("Status", secondaryColor)}${th("Total", secondaryColor)}${th("Ordered", secondaryColor)}</tr>${orderRows}</table>
+
+  <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Order requests</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Inquiry", secondaryColor)}${th("Cargo", secondaryColor)}${th("Route", secondaryColor)}${th("Laycan", secondaryColor)}${th("Rate idea", secondaryColor)}</tr>${orderRequestRows}</table>
 
   <div style="font-size:12px;font-weight:700;color:${navy};margin:18px 0 8px;text-transform:uppercase;letter-spacing:0.04em;">Support cases</div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;"><tr>${th("Subject", secondaryColor)}${th("Status", secondaryColor)}${th("Opened", secondaryColor)}${th("Priority", secondaryColor)}</tr>${casesRows}</table>

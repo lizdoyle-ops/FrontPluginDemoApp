@@ -88,6 +88,19 @@ export const orderSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const orderRequestSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  broker: z.string(),
+  charterer: z.string(),
+  cargo: z.string(),
+  quantity: z.string(),
+  loadPort: z.string(),
+  dischargePort: z.string(),
+  laycan: z.string(),
+  rateIdea: z.string(),
+});
+
 export const workOrderSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -244,6 +257,7 @@ export const contactDataSchema = z.object({
   cases: z.array(caseSchema),
   opportunities: z.array(opportunitySchema),
   orders: z.array(orderSchema),
+  orderRequests: z.array(orderRequestSchema),
   workOrders: z.array(workOrderSchema),
   contracts: z.array(contractSchema),
   timeline: z.array(timelineSchema),

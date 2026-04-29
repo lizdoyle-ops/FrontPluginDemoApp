@@ -6,9 +6,9 @@ export const API_DOCS_DEMO_EMAIL_ENCODED = "leyton%40finalproduction.club";
 /** JSON bodies for POST / PUT / PATCH keyed by `METHOD|pathTemplate`. */
 const EXAMPLE_JSON_BY_METHOD_PATH: Record<string, string> = {
   "POST|/api/contacts":
-    '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"pets":[],"policies":[],"policyholder":{"name":"","dob":"","email":"","phone":"","address":"","authorisedContacts":[]},"cover":{"vetFeeLimit":0,"vetFeeLimitType":"","remainingLimitThisYear":0,"excess":{"fixed":0,"coInsurance":""},"complementaryTreatment":0,"dental":0,"thirdPartyLiability":0,"exclusions":[]},"claimsHistory":[],"invoices":[]}',
+    '{"email":"new.client@example.com","name":"New Client","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"orderRequests":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"pets":[],"policies":[],"policyholder":{"name":"","dob":"","email":"","phone":"","address":"","authorisedContacts":[]},"cover":{"vetFeeLimit":0,"vetFeeLimitType":"","remainingLimitThisYear":0,"excess":{"fixed":0,"coInsurance":""},"complementaryTreatment":0,"dental":0,"thirdPartyLiability":0,"exclusions":[]},"claimsHistory":[],"invoices":[]}',
   "PUT|/api/contacts/{email}":
-    '{"email":"leyton@finalproduction.club","name":"Leyton","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"pets":[],"policies":[],"policyholder":{"name":"","dob":"","email":"","phone":"","address":"","authorisedContacts":[]},"cover":{"vetFeeLimit":0,"vetFeeLimitType":"","remainingLimitThisYear":0,"excess":{"fixed":0,"coInsurance":""},"complementaryTreatment":0,"dental":0,"thirdPartyLiability":0,"exclusions":[]},"claimsHistory":[],"invoices":[]}',
+    '{"email":"leyton@finalproduction.club","name":"Leyton","company":"","role":"","segment":"","tags":[],"properties":[],"quotes":[],"opportunities":[],"orders":[],"orderRequests":[],"inquiries":[],"cases":[],"workOrders":[],"contracts":[],"timeline":[],"attachments":[],"pets":[],"policies":[],"policyholder":{"name":"","dob":"","email":"","phone":"","address":"","authorisedContacts":[]},"cover":{"vetFeeLimit":0,"vetFeeLimitType":"","remainingLimitThisYear":0,"excess":{"fixed":0,"coInsurance":""},"complementaryTreatment":0,"dental":0,"thirdPartyLiability":0,"exclusions":[]},"claimsHistory":[],"invoices":[]}',
   "PATCH|/api/contacts/{email}": '{"segment":"Updated segment"}',
   "POST|/api/contacts/{email}/cases":
     '{"id":"case-api-demo","subject":"Support","status":"open","openedAt":"2026-04-01","priority":"medium"}',
@@ -40,6 +40,12 @@ const EXAMPLE_JSON_BY_METHOD_PATH: Record<string, string> = {
     '{"id":"q-demo","referenceNumber":"#RE-1604-08501","productName":"Alpine ski week","supplier":"Demo Travel Co","requestedDatesPeriod":"12–19 Jan 2027","startingFromPerPerson":899,"numberOfParticipants":4,"rooms":"2× twin","lastName":"Chen","firstName":"Leyton","address":"42 Elm Street, Manchester","phone":"+44 7700 900123","email":"leyton@finalproduction.club","messageNotes":"Late arrival on day 1","participants":[{"firstName":"Leyton","lastName":"Chen","category":"adult"},{"firstName":"River","lastName":"Chen","category":"child"}],"title":"Location package Q1","amount":500,"currency":"GBP","status":"pending"}',
   "PUT|/api/contacts/{email}/quotes/{id}":
     '{"title":"Location package Q1","amount":550,"currency":"GBP","status":"accepted","referenceNumber":"#RE-1604-08501","productName":"Alpine ski week"}',
+  "POST|/api/contacts/{email}/order-requests":
+    '{"id":"or-cargo-demo","title":"CARGO INQUIRY – INQ-2026-0891","broker":"Clarksons","charterer":"BASF SE","cargo":"Methanol","quantity":"3,000mt","loadPort":"Rotterdam","dischargePort":"Antwerp","laycan":"20-23 April 2026","rateIdea":"€85/mt"}',
+  "POST|/api/contacts/{email}/order-requests/{id}":
+    '{"id":"or-cargo-demo","title":"CARGO INQUIRY – INQ-2026-0891","broker":"Clarksons","charterer":"BASF SE","cargo":"Methanol","quantity":"3,000mt","loadPort":"Rotterdam","dischargePort":"Antwerp","laycan":"20-23 April 2026","rateIdea":"€85/mt"}',
+  "PUT|/api/contacts/{email}/order-requests/{id}":
+    '{"title":"CARGO INQUIRY – INQ-2026-0891","broker":"Clarksons","charterer":"BASF SE","cargo":"Methanol","quantity":"3,000mt","loadPort":"Rotterdam","dischargePort":"Antwerp","laycan":"20-23 April 2026","rateIdea":"€90/mt"}',
   "POST|/api/contacts/{email}/opportunities":
     '{"id":"opp-demo","title":"Pipeline deal","stage":"prospecting"}',
   "POST|/api/contacts/{email}/opportunities/{id}":
@@ -108,6 +114,7 @@ function exampleIdForPath(path: string): string {
   if (path.includes("/quotes/")) return "q-demo";
   if (path.includes("/opportunities/")) return "opp-demo";
   if (path.includes("/orders/")) return "ord-demo";
+  if (path.includes("/order-requests/")) return "or-cargo-demo";
   if (path.includes("/inquiries/")) return "inq-demo";
   if (path.includes("/contracts/")) return "con-demo";
   if (path.includes("/attachments/")) return "att-demo";

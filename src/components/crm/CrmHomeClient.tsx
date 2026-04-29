@@ -62,6 +62,7 @@ type TabId =
   | "quotes"
   | "opportunities"
   | "orders"
+  | "orderRequests"
   | "cases"
   | "contracts"
   | "timeline"
@@ -82,6 +83,7 @@ const BASE_TABS: { id: TabId; label: string }[] = [
   { id: "quotes", label: "Quotes" },
   { id: "opportunities", label: "Opportunities" },
   { id: "orders", label: "Orders" },
+  { id: "orderRequests", label: "Order requests" },
   { id: "cases", label: "Cases" },
   { id: "contracts", label: "Contracts" },
   { id: "timeline", label: "Timeline" },
@@ -734,6 +736,12 @@ export function CrmHomeClient() {
                   <dt className="text-zinc-500">Quotes</dt>
                   <dd className="font-medium">{contact.quotes.length}</dd>
                 </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-zinc-500">Order requests</dt>
+                  <dd className="font-medium">
+                    {(contact.orderRequests ?? []).length}
+                  </dd>
+                </div>
               </dl>
               <p className="mt-6 text-[11px] leading-relaxed text-zinc-500">
                 Data is stored on this host (see API docs). The sidebar plugin
@@ -1035,6 +1043,60 @@ export function CrmHomeClient() {
                 currency: "GBP",
                 fulfilledAt: "",
                 notes: "",
+              },
+            }),
+        );
+      case "orderRequests":
+        return renderTable(
+          (contact.orderRequests ?? []) as unknown as Record<
+            string,
+            unknown
+          >[],
+          [
+            { key: "id", label: "ID" },
+            { key: "title", label: "Inquiry" },
+            { key: "cargo", label: "Cargo" },
+            { key: "loadPort", label: "Load" },
+            { key: "dischargePort", label: "Discharge" },
+          ],
+          (row, i) =>
+            setModal({
+              kind: "edit",
+              recordKey: "orderRequest",
+              index: i,
+              draft: {
+                id: String(row.id ?? ""),
+                title: String(row.title ?? ""),
+                broker: String(row.broker ?? ""),
+                charterer: String(row.charterer ?? ""),
+                cargo: String(row.cargo ?? ""),
+                quantity: String(row.quantity ?? ""),
+                loadPort: String(row.loadPort ?? ""),
+                dischargePort: String(row.dischargePort ?? ""),
+                laycan: String(row.laycan ?? ""),
+                rateIdea: String(row.rateIdea ?? ""),
+              },
+            }),
+          (row, i) => {
+            const next = (contact.orderRequests ?? []).filter((_, j) => j !== i);
+            void patchArrays("orderRequests", next);
+          },
+          "Add order request",
+          () =>
+            setModal({
+              kind: "edit",
+              recordKey: "orderRequest",
+              draft: {
+                id: `or-${Date.now()}`,
+                title: "",
+                broker: "",
+                charterer: "",
+                cargo: "",
+                quantity: "",
+                loadPort: "",
+                dischargePort: "",
+                laycan: "",
+                rateIdea: "",
               },
             }),
         );
@@ -1605,6 +1667,27 @@ export function CrmHomeClient() {
       if (index !== undefined) list[index] = ord;
       else list.push(ord);
       void patchArrays("orders", list);
+      setModal(null);
+      return;
+    }
+    if (recordKey === "orderRequest") {
+      const trim = (v: unknown) => String(v ?? "").trim();
+      const or: ContactData["orderRequests"][number] = {
+        id: draft.id,
+        title: trim(draft.title),
+        broker: trim(draft.broker),
+        charterer: trim(draft.charterer),
+        cargo: trim(draft.cargo),
+        quantity: trim(draft.quantity),
+        loadPort: trim(draft.loadPort),
+        dischargePort: trim(draft.dischargePort),
+        laycan: trim(draft.laycan),
+        rateIdea: trim(draft.rateIdea),
+      };
+      const list = [...(contact.orderRequests ?? [])];
+      if (index !== undefined) list[index] = or;
+      else list.push(or);
+      void patchArrays("orderRequests", list);
       setModal(null);
       return;
     }
@@ -2506,6 +2589,131 @@ export function CrmHomeClient() {
                 }
               />
             </Field>
+          </>
+        );
+      case "orderRequest":
+        return (
+          <>
+            <Field label="ID">
+              <input
+                className={inputClass(modal.index !== undefined)}
+                readOnly={modal.index !== undefined}
+                value={d.id}
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, id: e.target.value } })
+                }
+              />
+            </Field>
+            <Field label="Title / inquiry ref">
+              <input
+                className={inputClass()}
+                value={d.title}
+                placeholder="e.g. CARGO INQUIRY – INQ-2026-0891"
+                onChange={(e) =>
+                  setModal({ ...modal, draft: { ...d, title: e.target.value } })
+                }
+              />
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Broker">
+                <input
+                  className={inputClass()}
+                  value={d.broker}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, broker: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Charterer">
+                <input
+                  className={inputClass()}
+                  value={d.charterer}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, charterer: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Cargo">
+                <input
+                  className={inputClass()}
+                  value={d.cargo}
+                  onChange={(e) =>
+                    setModal({ ...modal, draft: { ...d, cargo: e.target.value } })
+                  }
+                />
+              </Field>
+              <Field label="Quantity">
+                <input
+                  className={inputClass()}
+                  value={d.quantity}
+                  placeholder="e.g. 3,000mt"
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, quantity: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Load port">
+                <input
+                  className={inputClass()}
+                  value={d.loadPort}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, loadPort: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+              <Field label="Discharge port">
+                <input
+                  className={inputClass()}
+                  value={d.dischargePort}
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, dischargePort: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Laycan">
+                <input
+                  className={inputClass()}
+                  value={d.laycan}
+                  onChange={(e) =>
+                    setModal({ ...modal, draft: { ...d, laycan: e.target.value } })
+                  }
+                />
+              </Field>
+              <Field label="Rate idea">
+                <input
+                  className={inputClass()}
+                  value={d.rateIdea}
+                  placeholder="e.g. €85/mt"
+                  onChange={(e) =>
+                    setModal({
+                      ...modal,
+                      draft: { ...d, rateIdea: e.target.value },
+                    })
+                  }
+                />
+              </Field>
+            </div>
           </>
         );
       case "pet":

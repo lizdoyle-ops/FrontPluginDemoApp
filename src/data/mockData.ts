@@ -102,6 +102,20 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         notes: "Camera package + grip",
       },
     ],
+    orderRequests: [
+      {
+        id: "or-cargo-inq-0891",
+        title: "CARGO INQUIRY – INQ-2026-0891",
+        broker: "Clarksons",
+        charterer: "BASF SE",
+        cargo: "Methanol",
+        quantity: "3,000mt",
+        loadPort: "Rotterdam",
+        dischargePort: "Antwerp",
+        laycan: "20-23 April 2026",
+        rateIdea: "€85/mt",
+      },
+    ],
     workOrders: [
       {
         id: "wo1",
@@ -338,6 +352,7 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         fulfilledAt: "2026-03-05",
       },
     ],
+    orderRequests: [],
     workOrders: [
       {
         id: "wo3",
@@ -479,6 +494,7 @@ export const MOCK_CONTACTS: Record<string, ContactData> = {
         currency: "GBP",
       },
     ],
+    orderRequests: [],
     workOrders: [
       {
         id: "wo4",

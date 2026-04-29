@@ -265,6 +265,36 @@ export const STATIC_API_DOC_ROWS: ApiDocRow[] = [
     note: "Delete order by id.",
   },
   {
+    object: "Order requests",
+    methods: "POST",
+    path: "/api/contacts/{email}/order-requests",
+    note: "Upsert cargo / charter order request (id in body).",
+  },
+  {
+    object: "Order request",
+    methods: "GET",
+    path: "/api/contacts/{email}/order-requests/{id}",
+    note: "Read one order request JSON.",
+  },
+  {
+    object: "Order request",
+    methods: "POST",
+    path: "/api/contacts/{email}/order-requests/{id}",
+    note: "Upsert (201).",
+  },
+  {
+    object: "Order request",
+    methods: "PUT",
+    path: "/api/contacts/{email}/order-requests/{id}",
+    note: "Upsert (200).",
+  },
+  {
+    object: "Order request",
+    methods: "DELETE",
+    path: "/api/contacts/{email}/order-requests/{id}",
+    note: "Delete order request by id.",
+  },
+  {
     object: "Inquiries",
     methods: "POST",
     path: "/api/contacts/{email}/inquiries",
