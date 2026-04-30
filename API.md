@@ -37,7 +37,7 @@ Example with the default demo token (replace if you set `NEXT_PUBLIC_DEMO_API_TO
 
 Anyone with that URL can view the work order while the token is valid—treat it like a credential.
 
-**Persistence:** The demo store is seeded from mock contacts. **Without `POSTGRES_URL`:** if the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored). **With `POSTGRES_URL`:** each contact is stored as one JSON document in table **`demo_contacts`** (`email` primary key, `payload` = full `ContactData` including nested arrays and `customLists`). Mock seeds still apply for emails with no DB row until you overwrite or delete them.
+**Persistence:** The demo store is seeded from mock contacts. **Without KV configured:** if the directory `data/` is writable, updates are mirrored to `data/demo-store.json` (gitignored). **With Vercel KV / Upstash Redis configured** (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`, or the `KV_REST_API_*` aliases the Vercel marketplace integration sets): contacts are stored under the Redis hash **`demo:contacts`** (field = email, value = full `ContactData` JSON). Mock seeds still apply on first read until you overwrite or delete them.
 
 ### CRM workspace (browser UI)
 
@@ -45,32 +45,35 @@ Full-screen desk at **`/crm`** (also linked from the plugin hamburger as **CRM �
 
 On **Vercel**, the filesystem is ephemeral: persistence across deploys is not guaranteed unless you add external storage.
 
-## Admin config (Postgres / Supabase)
+## Admin config & contact storage (Vercel KV / Upstash Redis)
 
-CRM **Admin centre** settings (branding, section order, custom object definitions) can be stored in Postgres instead of only the browser.
+The demo uses **Upstash Redis over HTTP** (Vercel KV under the hood) so the Front plugin iframe and the Back Office tab share the same data without a database server.
 
-1. Create the table (once): run `db/migrations/001_demo_admin_config.sql` in the Supabase SQL Editor, or rely on the app’s first request (it runs `CREATE TABLE IF NOT EXISTS`).
-2. Set **`POSTGRES_URL`** (or **`POSTGRES_PRISMA_URL`**) on **Vercel** (and optionally `.env.local` for dev) to your Supabase **database connection URI** (server-side string from **Project Settings → Database**).
-3. Redeploy. Same **`Authorization: Bearer`** token as the rest of the API.
+1. On Vercel, install the **Upstash** integration from the Marketplace (or any Vercel KV provider). It auto-sets `KV_REST_API_URL` / `KV_REST_API_TOKEN`. Standalone Upstash projects use `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — both are accepted.
+2. No schema, no migration, no SSL config. The app creates keys on first write.
+3. Locally you can leave the env vars unset; the app falls back to in-memory + `data/demo-store.json`.
+
+**Storage layout**
+
+| Redis key | Type | Contents |
+|-----------|------|----------|
+| `demo:contacts` | hash | Field = lowercased email; value = full `ContactData` JSON |
+| `demo:admin-config` | string | Admin payload (Zod shape in `src/lib/api/demoAdminConfigPayloadSchema.ts`) |
 
 **Endpoints**
 
 | Method | Path | Notes |
 |--------|------|--------|
-| `GET` | `/api/demo-admin-config` | Returns `{ "payload": null }` if no row yet; otherwise `{ "payload": { ... } }` matching the Zod shape in `src/lib/api/demoAdminConfigPayloadSchema.ts`. **503** if no Postgres URL is configured or the DB errors. |
-| `PUT` | `/api/demo-admin-config` | Body `{ "payload": { ... } }` (full snapshot). Upserts row `id = "global"` in table **`demo_admin_config`**. **503** if DB unavailable. |
+| `GET` | `/api/demo-admin-config` | Returns `{ "payload": ... }` (object or `null`). Falls back to file mirror when KV is unavailable. |
+| `PUT` | `/api/demo-admin-config` | Body `{ "payload": { ... } }` full snapshot; written to KV (and a file mirror as backup). |
 
-**Smoke test** (after `BASE` and `H` are set as above):
+**Smoke test:**
 
 ```bash
 curl -sS -H "$H" "$BASE/api/demo-admin-config"
 ```
 
-Expect **200** and `payload` JSON or `null`. The in-app **Save admin settings** button writes local storage then **PUT**s this snapshot in the background when the payload validates.
-
-### Contact CRM data (`demo_contacts`)
-
-Same **`POSTGRES_URL`** as above. Migration: `db/migrations/002_demo_contacts.sql` (optional; the app creates the table on first use). All `/api/contacts` reads and writes go through Postgres when configured; the OpenAPI/Zod `ContactData` shape is the JSON stored in **`payload`**.
+The in-app **Save admin settings** button writes local storage then **PUT**s this snapshot to KV in the background.
 
 ## List contacts
 

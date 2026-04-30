@@ -122,12 +122,63 @@ export function ContactDashboard({
 }) {
   const [draftStatus, setDraftStatus] = useState<string | null>(null);
 
-  const defById = useMemo(
+  const customLists = useMemo(
+    () => contact.customLists ?? {},
+    [contact.customLists],
+  );
+
+  const { mergedDefs, mergedOrder, mergedVisibleCustom } = useMemo(() => {
+    const defIds = new Set(customObjectDefinitions.map((d) => d.id));
+    const fromContactKeys = Object.keys(customLists);
+    const inferred: CustomObjectDefinition[] = [];
+    for (const id of fromContactKeys) {
+      if (defIds.has(id)) continue;
+      const rows = customLists[id] ?? [];
+      const keySet = new Set<string>();
+      for (const row of rows) {
+        for (const k of Object.keys(row)) {
+          if (k !== "id") keySet.add(k);
+        }
+      }
+      const fieldKeys =
+        keySet.size ? [...keySet].sort() : ["value"];
+      inferred.push({
+        id,
+        title: id.startsWith("obj-") ? "Custom list" : id,
+        fieldKeys,
+      });
+    }
+    const mergedDefs = [...customObjectDefinitions, ...inferred];
+    const idSet = new Set(mergedDefs.map((d) => d.id));
+    const order = customObjectOrder.filter((id) => idSet.has(id));
+    for (const d of mergedDefs) {
+      if (!order.includes(d.id)) order.push(d.id);
+    }
+    const vis = { ...visibleCustomObjects };
+    for (const d of mergedDefs) {
+      if (vis[d.id] === undefined) vis[d.id] = true;
+    }
+    for (const k of Object.keys(vis)) {
+      if (!idSet.has(k)) delete vis[k];
+    }
+    return {
+      mergedDefs,
+      mergedOrder: order,
+      mergedVisibleCustom: vis,
+    };
+  }, [
+    customLists,
+    customObjectDefinitions,
+    customObjectOrder,
+    visibleCustomObjects,
+  ]);
+
+  const mergedDefById = useMemo(
     () =>
       Object.fromEntries(
-        customObjectDefinitions.map((d) => [d.id, d]),
+        mergedDefs.map((d) => [d.id, d]),
       ) as Record<string, CustomObjectDefinition>,
-    [customObjectDefinitions],
+    [mergedDefs],
   );
 
   const emailBranding: EmailBranding = useMemo(
@@ -262,8 +313,6 @@ export function ContactDashboard({
     },
   };
 
-  const customLists = contact.customLists ?? {};
-
   return (
     <div className="mx-auto flex w-full max-w-full flex-col gap-3 px-3 pb-8 pt-3 sm:px-4 lg:gap-4 lg:px-6">
       <ContactCard contact={contact} />
@@ -297,9 +346,9 @@ export function ContactDashboard({
             </CollapsibleSection>
           );
         })}
-        {customObjectOrder.map((oid) => {
-          if (visibleCustomObjects[oid] === false) return null;
-          const def = defById[oid];
+        {mergedOrder.map((oid) => {
+          if (mergedVisibleCustom[oid] === false) return null;
+          const def = mergedDefById[oid];
           if (!def) return null;
           const rows = customLists[oid] ?? [];
           return (

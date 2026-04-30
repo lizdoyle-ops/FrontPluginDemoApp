@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 import { MOCK_CONTACTS } from "@/data/mockData";
 import {
-  pgDeleteContact,
-  pgGetContactPayload,
-  pgListAllContacts,
-  pgUpsertContact,
-} from "@/lib/server/demoContactsPg";
-import { isPostgresConfigured } from "@/lib/server/postgresUrl";
+  kvDeleteContact,
+  kvGetContactPayload,
+  kvListAllContacts,
+  kvUpsertContact,
+} from "@/lib/server/demoContactsKv";
+import { isKvConfigured } from "@/lib/server/kvClient";
 import type { ContactData, CustomListRow, TimelineEvent } from "@/types/contact";
 import { emptyCover, emptyPolicyholder } from "@/types/insurance";
 import type { Pet, Policy } from "@/types/insurance";
@@ -17,12 +17,12 @@ const DATA_FILE = path.join(DATA_DIR, "demo-store.json");
 
 type StoreShape = Record<string, ContactData>;
 
-let pgSeedPromise: Promise<void> | null = null;
+let kvSeedPromise: Promise<void> | null = null;
 
-function logPostgresFallback(op: string, error: unknown): void {
+function logKvFallback(op: string, error: unknown): void {
   const message =
-    error instanceof Error ? error.message : "Unknown Postgres error";
-  console.error(`[demoStore] Postgres ${op} failed; falling back to memory.`, {
+    error instanceof Error ? error.message : "Unknown KV error";
+  console.error(`[demoStore] KV ${op} failed; falling back to memory.`, {
     message,
   });
 }
@@ -162,22 +162,22 @@ let memory: StoreShape = normalizeEntireStore(
   normalizeStoreKeys({ ...MOCK_CONTACTS }),
 );
 
-async function ensurePostgresSeeded(): Promise<void> {
-  if (!isPostgresConfigured()) return;
-  if (pgSeedPromise) return pgSeedPromise;
+async function ensureKvSeeded(): Promise<void> {
+  if (!isKvConfigured()) return;
+  if (kvSeedPromise) return kvSeedPromise;
 
-  pgSeedPromise = (async () => {
-    const existing = await pgListAllContacts();
+  kvSeedPromise = (async () => {
+    const existing = await kvListAllContacts();
     if (existing.length > 0) return;
     for (const c of Object.values(MOCK_CONTACTS)) {
-      await pgUpsertContact(normalizeContactForStore(c));
+      await kvUpsertContact(normalizeContactForStore(c));
     }
   })().catch((error) => {
-    pgSeedPromise = null;
+    kvSeedPromise = null;
     throw error;
   });
 
-  return pgSeedPromise;
+  return kvSeedPromise;
 }
 
 function readFileStore(): StoreShape | null {
@@ -203,7 +203,7 @@ function writeFileStore(data: StoreShape) {
 }
 
 export function initDemoStoreFromDisk() {
-  if (isPostgresConfigured()) return;
+  if (isKvConfigured()) return;
   const fromDisk = readFileStore();
   const merged = fromDisk
     ? normalizeStoreKeys({ ...MOCK_CONTACTS, ...fromDisk })
@@ -223,13 +223,13 @@ function getContactFromMemoryOnly(email: string): ContactData | undefined {
 }
 
 export async function getAllContacts(): Promise<StoreShape> {
-  if (!isPostgresConfigured()) {
+  if (!isKvConfigured()) {
     return { ...memory };
   }
 
   try {
-    await ensurePostgresSeeded();
-    const dbRows = await pgListAllContacts();
+    await ensureKvSeeded();
+    const dbRows = await kvListAllContacts();
     const dbRecord: StoreShape = {};
     for (const c of dbRows) {
       const n = normalizeContactForStore(c);
@@ -237,7 +237,7 @@ export async function getAllContacts(): Promise<StoreShape> {
     }
     return dbRecord;
   } catch (error) {
-    logPostgresFallback("list-all", error);
+    logKvFallback("list-all", error);
     return { ...memory };
   }
 }
@@ -255,16 +255,16 @@ export async function getContact(
   email: string,
 ): Promise<ContactData | undefined> {
   const key = email.trim().toLowerCase();
-  if (!isPostgresConfigured()) {
+  if (!isKvConfigured()) {
     return getContactFromMemoryOnly(email);
   }
   try {
-    await ensurePostgresSeeded();
-    const fromDb = await pgGetContactPayload(key);
+    await ensureKvSeeded();
+    const fromDb = await kvGetContactPayload(key);
     if (fromDb) return normalizeContactForStore(fromDb);
     return undefined;
   } catch (error) {
-    logPostgresFallback("get-contact", error);
+    logKvFallback("get-contact", error);
     return getContactFromMemoryOnly(email);
   }
 }
@@ -276,17 +276,17 @@ export async function putContact(email: string, data: ContactData) {
     ...data,
     email: data.email.trim(),
   });
-  if (isPostgresConfigured()) {
+  if (isKvConfigured()) {
     try {
-      await ensurePostgresSeeded();
-      const prev = await pgGetContactPayload(key);
+      await ensureKvSeeded();
+      const prev = await kvGetContactPayload(key);
       if (prev && key !== newKey) {
-        await pgDeleteContact(key);
+        await kvDeleteContact(key);
       }
-      await pgUpsertContact(normalized);
+      await kvUpsertContact(normalized);
       return;
     } catch (error) {
-      logPostgresFallback("upsert-contact", error);
+      logKvFallback("upsert-contact", error);
     }
   }
 
@@ -311,12 +311,12 @@ export async function patchContact(
 
 export async function deleteContact(email: string): Promise<boolean> {
   const key = email.trim().toLowerCase();
-  if (isPostgresConfigured()) {
+  if (isKvConfigured()) {
     try {
-      await ensurePostgresSeeded();
-      return pgDeleteContact(key);
+      await ensureKvSeeded();
+      return kvDeleteContact(key);
     } catch (error) {
-      logPostgresFallback("delete-contact", error);
+      logKvFallback("delete-contact", error);
     }
   }
   const target = getContactFromMemoryOnly(email);

@@ -13,8 +13,13 @@ export async function fetchContactData(
     if (res.ok) {
       return (await res.json()) as ContactData;
     }
+    if (res.status === 404) {
+      return undefined;
+    }
+    /* Avoid falling back to MOCK_CONTACTS on auth/config errors — that hides real CRM data. */
+    return undefined;
   } catch {
-    /* offline or API error */
+    /* offline */
+    return getMockContact(email);
   }
-  return getMockContact(email);
 }

@@ -622,7 +622,7 @@ export function AdminCentre({
               const ok = cfg.saveToStorage();
               notify(
                 ok
-                  ? "Admin settings saved to this browser (cloud sync runs when POSTGRES_URL is set)."
+                  ? "Admin settings saved to this browser (and pushed to KV when configured)."
                   : "Could not save (storage blocked, private mode, or full).",
               );
             }}

@@ -1,24 +1,30 @@
 import { NextResponse } from "next/server";
 import { demoAdminConfigPayloadSchema } from "@/lib/api/demoAdminConfigPayloadSchema";
 import { verifyDemoApiAuth } from "@/lib/api/verifyDemoApiAuth";
-import { getDemoAdminConfigRow, upsertDemoAdminConfigRow } from "@/lib/server/demoAdminConfigPg";
-import { isPostgresConfigured } from "@/lib/server/postgresUrl";
+import {
+  getFallbackDemoAdminConfig,
+  setFallbackDemoAdminConfig,
+} from "@/lib/server/demoAdminConfigFallback";
+import {
+  kvGetDemoAdminConfig,
+  kvUpsertDemoAdminConfig,
+} from "@/lib/server/demoAdminConfigKv";
+import { isKvConfigured } from "@/lib/server/kvClient";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const denied = verifyDemoApiAuth(request);
   if (denied) return denied;
-  if (!isPostgresConfigured()) {
-    return NextResponse.json(
-      { error: "Database not configured", payload: null },
-      { status: 503 },
-    );
+  if (!isKvConfigured()) {
+    const fallback = getFallbackDemoAdminConfig();
+    return NextResponse.json({ payload: fallback });
   }
   try {
-    const raw = await getDemoAdminConfigRow();
+    const raw = await kvGetDemoAdminConfig();
     if (raw == null) {
-      return NextResponse.json({ payload: null });
+      const fallback = getFallbackDemoAdminConfig();
+      return NextResponse.json({ payload: fallback });
     }
     const parsed = demoAdminConfigPayloadSchema.safeParse(raw);
     if (!parsed.success) {
@@ -30,9 +36,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ payload: parsed.data });
   } catch (e) {
     console.error("demo-admin-config GET", e);
+    const fallback = getFallbackDemoAdminConfig();
     return NextResponse.json(
-      { error: "Database error", payload: null },
-      { status: 503 },
+      { error: "KV error", payload: fallback },
+      { status: 200 },
     );
   }
 }
@@ -40,12 +47,6 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   const denied = verifyDemoApiAuth(request);
   if (denied) return denied;
-  if (!isPostgresConfigured()) {
-    return NextResponse.json(
-      { error: "Database not configured" },
-      { status: 503 },
-    );
-  }
   let body: unknown;
   try {
     body = await request.json();
@@ -64,11 +65,18 @@ export async function PUT(request: Request) {
       { status: 400 },
     );
   }
+  setFallbackDemoAdminConfig(parsed.data);
+  if (!isKvConfigured()) {
+    return NextResponse.json({ ok: true });
+  }
   try {
-    await upsertDemoAdminConfigRow(parsed.data);
+    await kvUpsertDemoAdminConfig(parsed.data);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("demo-admin-config PUT", e);
-    return NextResponse.json({ error: "Database error" }, { status: 503 });
+    return NextResponse.json(
+      { error: "KV error (saved to file fallback)" },
+      { status: 200 },
+    );
   }
 }
