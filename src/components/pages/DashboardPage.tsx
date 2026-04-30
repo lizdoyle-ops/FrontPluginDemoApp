@@ -12,6 +12,7 @@ import {
   extractEmailsFromMessages,
   normalizeMessageList,
 } from "@/lib/front/contactDetection";
+import { extractAttachmentsFromMessages } from "@/lib/front/extractAttachmentsFromMessages";
 import { pickReplyMessageId } from "@/lib/front/pickReplyMessageId";
 import { fetchContactData } from "@/lib/front/fetchContact";
 import { useDemoConfig } from "@/hooks/useDemoConfig";
@@ -69,6 +70,7 @@ export function DashboardPage() {
 
     try {
       const messages = await collectMessages();
+      const attachments = extractAttachmentsFromMessages(messages);
       const replyToMessageId = pickReplyMessageId(messages) ?? null;
       const emails = extractEmailsFromMessages(messages);
       for (const email of emails) {
@@ -76,7 +78,11 @@ export function DashboardPage() {
         if (c) {
           setState({
             status: "ready",
-            contact: c,
+            contact: {
+              ...c,
+              // Keep CRM data, but always mirror attachments from Front conversation.
+              attachments,
+            },
             replyToMessageId,
           });
           return;
