@@ -19,6 +19,14 @@ type StoreShape = Record<string, ContactData>;
 
 let pgSeedPromise: Promise<void> | null = null;
 
+function logPostgresFallback(op: string, error: unknown): void {
+  const message =
+    error instanceof Error ? error.message : "Unknown Postgres error";
+  console.error(`[demoStore] Postgres ${op} failed; falling back to memory.`, {
+    message,
+  });
+}
+
 function migratePolicy(raw: unknown): Policy {
   const o = raw as Record<string, unknown>;
   if (
@@ -219,14 +227,19 @@ export async function getAllContacts(): Promise<StoreShape> {
     return { ...memory };
   }
 
-  await ensurePostgresSeeded();
-  const dbRows = await pgListAllContacts();
-  const dbRecord: StoreShape = {};
-  for (const c of dbRows) {
-    const n = normalizeContactForStore(c);
-    dbRecord[n.email.trim().toLowerCase()] = n;
+  try {
+    await ensurePostgresSeeded();
+    const dbRows = await pgListAllContacts();
+    const dbRecord: StoreShape = {};
+    for (const c of dbRows) {
+      const n = normalizeContactForStore(c);
+      dbRecord[n.email.trim().toLowerCase()] = n;
+    }
+    return dbRecord;
+  } catch (error) {
+    logPostgresFallback("list-all", error);
+    return { ...memory };
   }
-  return dbRecord;
 }
 
 export async function listContactSummaries() {
@@ -245,10 +258,15 @@ export async function getContact(
   if (!isPostgresConfigured()) {
     return getContactFromMemoryOnly(email);
   }
-  await ensurePostgresSeeded();
-  const fromDb = await pgGetContactPayload(key);
-  if (fromDb) return normalizeContactForStore(fromDb);
-  return undefined;
+  try {
+    await ensurePostgresSeeded();
+    const fromDb = await pgGetContactPayload(key);
+    if (fromDb) return normalizeContactForStore(fromDb);
+    return undefined;
+  } catch (error) {
+    logPostgresFallback("get-contact", error);
+    return getContactFromMemoryOnly(email);
+  }
 }
 
 export async function putContact(email: string, data: ContactData) {
@@ -259,13 +277,17 @@ export async function putContact(email: string, data: ContactData) {
     email: data.email.trim(),
   });
   if (isPostgresConfigured()) {
-    await ensurePostgresSeeded();
-    const prev = await pgGetContactPayload(key);
-    if (prev && key !== newKey) {
-      await pgDeleteContact(key);
+    try {
+      await ensurePostgresSeeded();
+      const prev = await pgGetContactPayload(key);
+      if (prev && key !== newKey) {
+        await pgDeleteContact(key);
+      }
+      await pgUpsertContact(normalized);
+      return;
+    } catch (error) {
+      logPostgresFallback("upsert-contact", error);
     }
-    await pgUpsertContact(normalized);
-    return;
   }
 
   const prev = memory[key];
@@ -290,8 +312,12 @@ export async function patchContact(
 export async function deleteContact(email: string): Promise<boolean> {
   const key = email.trim().toLowerCase();
   if (isPostgresConfigured()) {
-    await ensurePostgresSeeded();
-    return pgDeleteContact(key);
+    try {
+      await ensurePostgresSeeded();
+      return pgDeleteContact(key);
+    } catch (error) {
+      logPostgresFallback("delete-contact", error);
+    }
   }
   const target = getContactFromMemoryOnly(email);
   if (!target) return false;
