@@ -228,7 +228,16 @@ export async function postCustomListRow(
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
   const updated = await appendCustomListRow(email, listId, parsed.data);
-  return NextResponse.json(updated, { status: 201 });
+  const createdRow =
+    updated?.customLists?.[listId]?.find((r) => r.id === parsed.data.id) ??
+    parsed.data;
+  return NextResponse.json(
+    {
+      listId,
+      row: createdRow,
+    },
+    { status: 201 },
+  );
 }
 
 export async function getCustomListRowByIndex(

@@ -17,16 +17,7 @@ const DATA_FILE = path.join(DATA_DIR, "demo-store.json");
 
 type StoreShape = Record<string, ContactData>;
 
-/** When Postgres is on, seeded contacts removed via DELETE stay hidden until restart. */
-const pgHiddenMockEmails = new Set<string>();
-
-function logPostgresFallback(op: string, error: unknown) {
-  const message =
-    error instanceof Error ? error.message : "Unknown Postgres error";
-  console.error(`[demoStore] Postgres ${op} failed; using fallback store.`, {
-    message,
-  });
-}
+let pgSeedPromise: Promise<void> | null = null;
 
 function migratePolicy(raw: unknown): Policy {
   const o = raw as Record<string, unknown>;
@@ -88,12 +79,13 @@ function newCustomListRowId(): string {
 /** Ensures custom list rows have ids; strips legacy timeline `id` fields. */
 export function normalizeContactForStore(c: ContactData): ContactData {
   const timeline = (c.timeline ?? []).map((ev) => {
-    const legacy = ev as TimelineEvent & { id?: string };
-    const { id: _drop, ...rest } = legacy;
+    const legacy = { ...(ev as TimelineEvent & { id?: string }) };
+    delete legacy.id;
+    const rest = legacy;
     return rest as TimelineEvent;
   });
 
-  const customLists = c.customLists
+  const customLists: Record<string, CustomListRow[]> = c.customLists
     ? Object.fromEntries(
         Object.entries(c.customLists).map(([listId, rows]) => [
           listId,
@@ -104,28 +96,40 @@ export function normalizeContactForStore(c: ContactData): ContactData {
           }),
         ]),
       )
-    : c.customLists;
+    : {};
 
-  const opportunities = c.opportunities ?? [];
-  const orders = c.orders ?? [];
-  const orderRequests = c.orderRequests ?? [];
   const pets = (c.pets ?? []).map(migratePet);
   const policies = (c.policies ?? []).map(migratePolicy);
   const policyholder = c.policyholder ?? emptyPolicyholder();
   const cover = c.cover ?? emptyCover();
-  const claimsHistory = c.claimsHistory ?? [];
+  const email = c.email?.trim() ?? "";
+
   return {
     ...c,
+    email,
+    name: c.name ?? "",
+    company: c.company ?? "",
+    role: c.role ?? "",
+    segment: c.segment ?? "",
+    tags: c.tags ?? [],
+    properties: c.properties ?? [],
+    quotes: c.quotes ?? [],
+    inquiries: c.inquiries ?? [],
+    cases: c.cases ?? [],
+    opportunities: c.opportunities ?? [],
+    orders: c.orders ?? [],
+    orderRequests: c.orderRequests ?? [],
+    workOrders: c.workOrders ?? [],
+    contracts: c.contracts ?? [],
     timeline,
+    attachments: c.attachments ?? [],
     customLists,
-    opportunities,
-    orders,
-    orderRequests,
     pets,
     policies,
     policyholder,
     cover,
-    claimsHistory,
+    claimsHistory: c.claimsHistory ?? [],
+    invoices: c.invoices ?? [],
   };
 }
 
@@ -149,6 +153,24 @@ function normalizeStoreKeys(contacts: StoreShape): StoreShape {
 let memory: StoreShape = normalizeEntireStore(
   normalizeStoreKeys({ ...MOCK_CONTACTS }),
 );
+
+async function ensurePostgresSeeded(): Promise<void> {
+  if (!isPostgresConfigured()) return;
+  if (pgSeedPromise) return pgSeedPromise;
+
+  pgSeedPromise = (async () => {
+    const existing = await pgListAllContacts();
+    if (existing.length > 0) return;
+    for (const c of Object.values(MOCK_CONTACTS)) {
+      await pgUpsertContact(normalizeContactForStore(c));
+    }
+  })().catch((error) => {
+    pgSeedPromise = null;
+    throw error;
+  });
+
+  return pgSeedPromise;
+}
 
 function readFileStore(): StoreShape | null {
   try {
@@ -192,37 +214,19 @@ function getContactFromMemoryOnly(email: string): ContactData | undefined {
   return Object.values(memory).find((c) => c.email.toLowerCase() === key);
 }
 
-function mockContactByKey(emailKey: string): ContactData | undefined {
-  const mock = MOCK_CONTACTS[emailKey];
-  if (mock) return { ...mock };
-  return Object.values(MOCK_CONTACTS).find(
-    (c) => c.email.trim().toLowerCase() === emailKey,
-  );
-}
-
 export async function getAllContacts(): Promise<StoreShape> {
   if (!isPostgresConfigured()) {
     return { ...memory };
   }
-  let dbRows: ContactData[];
-  try {
-    dbRows = await pgListAllContacts();
-  } catch (error) {
-    logPostgresFallback("list-all", error);
-    return { ...memory };
-  }
+
+  await ensurePostgresSeeded();
+  const dbRows = await pgListAllContacts();
   const dbRecord: StoreShape = {};
   for (const c of dbRows) {
     const n = normalizeContactForStore(c);
     dbRecord[n.email.trim().toLowerCase()] = n;
   }
-  const merged = normalizeEntireStore(
-    normalizeStoreKeys({ ...MOCK_CONTACTS, ...dbRecord }),
-  );
-  for (const key of pgHiddenMockEmails) {
-    delete merged[key];
-  }
-  return merged;
+  return dbRecord;
 }
 
 export async function listContactSummaries() {
@@ -241,40 +245,29 @@ export async function getContact(
   if (!isPostgresConfigured()) {
     return getContactFromMemoryOnly(email);
   }
-  if (pgHiddenMockEmails.has(key)) return undefined;
-  let fromDb: ContactData | null = null;
-  try {
-    fromDb = await pgGetContactPayload(key);
-  } catch (error) {
-    logPostgresFallback("get-contact", error);
-    return getContactFromMemoryOnly(email) ?? mockContactByKey(key);
-  }
+  await ensurePostgresSeeded();
+  const fromDb = await pgGetContactPayload(key);
   if (fromDb) return normalizeContactForStore(fromDb);
-  const fromMock = mockContactByKey(key);
-  return fromMock ? normalizeContactForStore(fromMock) : undefined;
+  return undefined;
 }
 
 export async function putContact(email: string, data: ContactData) {
+  const key = email.trim().toLowerCase();
   const newKey = data.email.trim().toLowerCase();
   const normalized = normalizeContactForStore({
     ...data,
     email: data.email.trim(),
   });
   if (isPostgresConfigured()) {
-    try {
-      pgHiddenMockEmails.delete(newKey);
-      const prev = await getContact(email);
-      if (prev && prev.email.trim().toLowerCase() !== newKey) {
-        await pgDeleteContact(prev.email.trim().toLowerCase());
-      }
-      await pgUpsertContact(normalized);
-      return;
-    } catch (error) {
-      logPostgresFallback("upsert-contact", error);
-      // Continue to memory fallback below.
+    await ensurePostgresSeeded();
+    const prev = await pgGetContactPayload(key);
+    if (prev && key !== newKey) {
+      await pgDeleteContact(key);
     }
+    await pgUpsertContact(normalized);
+    return;
   }
-  const key = email.trim().toLowerCase();
+
   const prev = memory[key];
   if (prev && prev.email.toLowerCase() !== newKey) {
     delete memory[key];
@@ -297,18 +290,8 @@ export async function patchContact(
 export async function deleteContact(email: string): Promise<boolean> {
   const key = email.trim().toLowerCase();
   if (isPostgresConfigured()) {
-    try {
-      const hadRow = await pgDeleteContact(key);
-      if (hadRow) return true;
-      const mock = mockContactByKey(key);
-      if (mock) {
-        pgHiddenMockEmails.add(key);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      logPostgresFallback("delete-contact", error);
-    }
+    await ensurePostgresSeeded();
+    return pgDeleteContact(key);
   }
   const target = getContactFromMemoryOnly(email);
   if (!target) return false;

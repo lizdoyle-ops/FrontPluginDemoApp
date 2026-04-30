@@ -109,6 +109,18 @@ export function DashboardPage() {
     return () => sub.unsubscribe();
   }, [resolveContact]);
 
+  useEffect(() => {
+    const refresh = () => {
+      queueMicrotask(() => void resolveContact());
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [resolveContact]);
+
   const demoKeys = Object.keys(MOCK_CONTACTS).join(", ");
 
   if (state.status === "loading") {
