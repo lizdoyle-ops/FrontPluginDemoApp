@@ -259,18 +259,25 @@ export async function getCustomListRowByIndex(
   request: Request,
   emailRaw: string,
   listIdRaw: string,
-  indexRaw: string,
+  rowKeyRaw: string,
 ) {
   const denied = verifyDemoApiAuth(request);
   if (denied) return denied;
   const email = decodeEmailParam(emailRaw);
   const listId = decodeIdParam(listIdRaw);
-  const index = Number.parseInt(indexRaw, 10);
-  if (!Number.isFinite(index) || index < 0) {
-    return NextResponse.json({ error: "Invalid row index" }, { status: 400 });
-  }
-  if (!(await getContact(email))) {
+  const rowKey = decodeIdParam(rowKeyRaw);
+  const contact = await getContact(email);
+  if (!contact) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const rows = contact.customLists?.[listId] ?? [];
+  const numericIndex = Number.parseInt(rowKey, 10);
+  const index =
+    Number.isFinite(numericIndex) && String(numericIndex) === rowKey && numericIndex >= 0 ?
+      numericIndex
+    : rows.findIndex((r) => r.id === rowKey);
+  if (index < 0 || index >= rows.length) {
+    return NextResponse.json({ error: "Row not found" }, { status: 404 });
   }
   const row = await getCustomListRow(email, listId, index);
   if (!row) {
@@ -283,17 +290,14 @@ export async function putCustomListRowAtIndex(
   request: Request,
   emailRaw: string,
   listIdRaw: string,
-  indexRaw: string,
+  rowKeyRaw: string,
   schema: z.ZodType<CustomListRow>,
 ) {
   const denied = verifyDemoApiAuth(request);
   if (denied) return denied;
   const email = decodeEmailParam(emailRaw);
   const listId = decodeIdParam(listIdRaw);
-  const index = Number.parseInt(indexRaw, 10);
-  if (!Number.isFinite(index) || index < 0) {
-    return NextResponse.json({ error: "Invalid row index" }, { status: 400 });
-  }
+  const rowKey = decodeIdParam(rowKeyRaw);
   let json: unknown;
   try {
     json = await request.json();
@@ -307,8 +311,18 @@ export async function putCustomListRowAtIndex(
       { status: 400 },
     );
   }
-  if (!(await getContact(email))) {
+  const contact = await getContact(email);
+  if (!contact) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const rows = contact.customLists?.[listId] ?? [];
+  const numericIndex = Number.parseInt(rowKey, 10);
+  const index =
+    Number.isFinite(numericIndex) && String(numericIndex) === rowKey && numericIndex >= 0 ?
+      numericIndex
+    : rows.findIndex((r) => r.id === rowKey);
+  if (index < 0 || index >= rows.length) {
+    return NextResponse.json({ error: "Row not found" }, { status: 404 });
   }
   const updated = await replaceCustomListRowAtIndex(
     email,
@@ -326,18 +340,25 @@ export async function deleteCustomListRowAtIndex(
   request: Request,
   emailRaw: string,
   listIdRaw: string,
-  indexRaw: string,
+  rowKeyRaw: string,
 ) {
   const denied = verifyDemoApiAuth(request);
   if (denied) return denied;
   const email = decodeEmailParam(emailRaw);
   const listId = decodeIdParam(listIdRaw);
-  const index = Number.parseInt(indexRaw, 10);
-  if (!Number.isFinite(index) || index < 0) {
-    return NextResponse.json({ error: "Invalid row index" }, { status: 400 });
-  }
-  if (!(await getContact(email))) {
+  const rowKey = decodeIdParam(rowKeyRaw);
+  const contact = await getContact(email);
+  if (!contact) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  const rows = contact.customLists?.[listId] ?? [];
+  const numericIndex = Number.parseInt(rowKey, 10);
+  const index =
+    Number.isFinite(numericIndex) && String(numericIndex) === rowKey && numericIndex >= 0 ?
+      numericIndex
+    : rows.findIndex((r) => r.id === rowKey);
+  if (index < 0 || index >= rows.length) {
+    return NextResponse.json({ error: "Row not found" }, { status: 404 });
   }
   const updated = await removeCustomListRowAtIndex(email, listId, index);
   if (!updated) {
