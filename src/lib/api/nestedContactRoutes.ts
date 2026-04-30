@@ -118,6 +118,21 @@ export async function getNestedItemById<K extends NestedIdCollectionKey>(
   return NextResponse.json(item);
 }
 
+export async function getNestedCollection<K extends NestedIdCollectionKey>(
+  request: Request,
+  emailRaw: string,
+  field: K,
+) {
+  const denied = verifyDemoApiAuth(request);
+  if (denied) return denied;
+  const email = decodeEmailParam(emailRaw);
+  const contact = await getContact(email);
+  if (!contact) {
+    return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+  }
+  return NextResponse.json(contact[field] ?? []);
+}
+
 /** Upsert one nested record; path `id` is merged into the JSON body (overrides body.id). */
 export async function upsertNestedItemByPathId<K extends NestedIdCollectionKey>(
   request: Request,

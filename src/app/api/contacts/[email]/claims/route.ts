@@ -1,7 +1,18 @@
 import { claimHistoryItemSchema } from "@/lib/api/contactSchemas";
-import { postNestedCollectionItem } from "@/lib/api/nestedContactRoutes";
+import {
+  getNestedCollection,
+  postNestedCollectionItem,
+} from "@/lib/api/nestedContactRoutes";
 
 type RouteParams = { email: string };
+
+export async function GET(
+  request: Request,
+  context: { params: Promise<RouteParams> },
+) {
+  const { email } = await context.params;
+  return getNestedCollection(request, email, "claimsHistory");
+}
 
 export async function POST(
   request: Request,
